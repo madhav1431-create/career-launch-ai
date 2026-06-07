@@ -2,28 +2,42 @@
 import pdfplumber
 
 skills = [
-    "python",
-    "sql",
-    "machine learning",
-    "deep learning",
-    "statistics",
-    "data structures",
-    "react",
-    "javascript",
-    "aws",
-    "docker",
-    "linux",
-    "java",
-    "git",
-    "html",
-    "css",
-    "unix"
+    # Programming Languages
+    "python", "java", "javascript", "typescript", "c++", "c#", "r", "scala", "go",
+    
+    # Web
+    "react", "angular", "vue", "node.js", "html", "css", "flask", "fastapi", "django",
+    
+    # Data & ML
+    "machine learning", "deep learning", "statistics", "numpy", "pandas",
+    "scikit-learn", "tensorflow", "pytorch", "keras", "opencv", "nlp",
+    "computer vision", "reinforcement learning", "transformers",
+    
+    # Data Engineering
+    "sql", "mysql", "postgresql", "mongodb", "spark", "hadoop", "airflow",
+    "kafka", "redis", "elasticsearch",
+    
+    # Cloud & DevOps
+    "aws", "azure", "gcp", "docker", "kubernetes", "linux", "unix",
+    "git", "github", "ci/cd", "terraform",
+    
+    # General
+    "data structures", "algorithms", "system design", "api", "rest api",
+    "microservices", "agile", "excel", "power bi", "tableau"
 ]
 
 skill_graph = {
     "deep learning": ["machine learning"],
     "machine learning": ["python", "statistics"],
-    "docker": ["linux"]
+    "docker": ["linux"],
+    "kubernetes": ["docker"],
+    "pytorch": ["python", "deep learning"],
+    "tensorflow": ["python", "deep learning"],
+    "spark": ["python", "sql"],
+    "nlp": ["python", "machine learning"],
+    "computer vision": ["python", "deep learning", "opencv"],
+    "fastapi": ["python"],
+    "flask": ["python"],
 }
 
 

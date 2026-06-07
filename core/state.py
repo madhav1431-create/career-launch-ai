@@ -1,0 +1,19 @@
+def create_state():
+    return {
+        "resume_text": "",
+        "resume_skills": [],
+        "jd_text": "",
+        "jd_skills": [],
+        "target_role": "",
+        "match_score": 0,
+        "level": "",
+        "overview": "",
+        "missing_skills": [],
+        "roadmap": [],
+        "project_recommendations": [],
+        "certifications": [],
+        "career_strategy": "",
+        "interview_questions": [],
+        "career_readiness_score": 0,
+        "agent_logs": []
+    }
