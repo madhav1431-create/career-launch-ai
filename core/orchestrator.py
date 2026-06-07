@@ -3,6 +3,8 @@ from agents.resume_agent import ResumeAgent
 from agents.match_agent import MatchAgent
 from agents.skill_gap_agent import SkillGapAgent
 from agents.learning_planner import LearningPlannerAgent
+from agents.career_strategist import CareerStrategistAgent
+from agents.interview_coach import InterviewCoachAgent
 from engine import extract_text_from_pdf, detect_skills
 
 class Orchestrator:
@@ -12,6 +14,8 @@ class Orchestrator:
             MatchAgent(),
             SkillGapAgent(),
             LearningPlannerAgent(),
+            CareerStrategistAgent(),
+            InterviewCoachAgent()
         ]
 
     def run(self, resume_path, jd_text, target_role):
@@ -23,7 +27,7 @@ class Orchestrator:
         state["jd_skills"] = detect_skills(jd_text.lower())
         state["target_role"] = target_role
 
-        # Run all agents in sequence
+        # Run all 6 agents in sequence
         for agent in self.agents:
             state = agent.run(state)
 
