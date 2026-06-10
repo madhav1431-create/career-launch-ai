@@ -40,6 +40,42 @@ skill_graph = {
     "flask": ["python"],
 }
 
+# Standard skill requirements per role
+role_skill_requirements = {
+    "Data Scientist": [
+        "python", "machine learning", "deep learning", "statistics",
+        "pandas", "numpy", "scikit-learn", "sql", "tensorflow",
+        "pytorch", "data structures", "git", "tableau"
+    ],
+    "ML Engineer": [
+        "python", "machine learning", "deep learning", "pytorch",
+        "tensorflow", "docker", "kubernetes", "aws", "git",
+        "linux", "spark", "mlops", "fastapi", "sql"
+    ],
+    "Data Analyst": [
+        "sql", "python", "excel", "tableau", "power bi",
+        "statistics", "pandas", "numpy", "git", "postgresql"
+    ],
+    "Backend Developer": [
+        "python", "java", "sql", "postgresql", "mongodb",
+        "docker", "git", "linux", "rest api", "fastapi",
+        "flask", "aws", "redis", "microservices"
+    ],
+    "AI Engineer": [
+        "python", "machine learning", "deep learning", "pytorch",
+        "tensorflow", "nlp", "computer vision", "docker",
+        "aws", "git", "fastapi", "transformers", "kubernetes"
+    ],
+    "Frontend Developer": [
+        "javascript", "typescript", "react", "html", "css",
+        "git", "rest api", "node.js", "vue", "docker"
+    ]
+}
+
+def get_role_skills(target_role):
+    return role_skill_requirements.get(target_role, [
+        "python", "sql", "git", "statistics", "machine learning"
+    ])
 
 def extract_text_from_pdf(file_path):
 

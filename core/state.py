@@ -4,6 +4,7 @@ def create_state():
         "resume_skills": [],
         "jd_text": "",
         "jd_skills": [],
+        "jd_source": "",
         "target_role": "",
         "match_score": 0,
         "level": "",
