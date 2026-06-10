@@ -698,22 +698,22 @@
     </div>
 
     <div class="nav-item active" onclick="showTab('dashboard')">
-      <span class="nav-icon">🏠</span> Career Dashboard
+      <span class="nav-icon"></span> Career Dashboard
     </div>
     <div class="nav-item" onclick="showTab('workflow')">
-      <span class="nav-icon">🤖</span> Agent Workflow
+      <span class="nav-icon"></span> Agent Workflow
     </div>
     <div class="nav-item" onclick="showTab('skills')">
-      <span class="nav-icon">🧠</span> Skill Intelligence
+      <span class="nav-icon"></span> Skill Intelligence
     </div>
     <div class="nav-item" onclick="showTab('learning')">
-      <span class="nav-icon">📚</span> Learning Plan
+      <span class="nav-icon"></span> Learning Plan
     </div>
     <div class="nav-item" onclick="showTab('projects')">
-      <span class="nav-icon">💡</span> Project Recs
+      <span class="nav-icon"></span> Project Recs
     </div>
     <div class="nav-item" onclick="showTab('interview')">
-      <span class="nav-icon">🎤</span> Interview Prep
+      <span class="nav-icon"></span> Interview Prep
     </div>
   </div>
 
@@ -722,15 +722,15 @@
   <div class="sidebar-bottom">
     <div class="upload-section">
 
-      <label>📄 Resume <span style="color:var(--red);font-size:9px;">REQUIRED</span></label>
+      <label>Resume <span style="color:var(--red);font-size:9px;">REQUIRED</span></label>
       <div class="upload-box" id="uploadBox" onclick="document.getElementById('resumeInput').click()">
-        <div style="font-size:22px;">📄</div>
+        <div style="font-size:22px;"></div>
         <div class="upload-filename" id="uploadText">Click to upload PDF</div>
         <p>PDF files only</p>
       </div>
       <input type="file" id="resumeInput" accept=".pdf" onchange="handleResumeUpload(this)">
 
-      <label style="margin-top:12px;">🎯 Target Role <span style="color:var(--red);font-size:9px;">REQUIRED</span></label>
+      <label style="margin-top:12px;"> Target Role <span style="color:var(--red);font-size:9px;">REQUIRED</span></label>
       <select class="select-input" id="roleSelect">
         <option>Data Scientist</option>
         <option>ML Engineer</option>
@@ -741,7 +741,7 @@
       </select>
 
       <label style="margin-top:12px;">
-        📋 Job Description
+         Job Description
         <span class="optional-label">Optional</span>
       </label>
       <div style="font-size:11px;color:var(--text2);margin-bottom:8px;line-height:1.4;">
@@ -749,14 +749,14 @@
       </div>
 
       <div class="jd-mode-btns">
-        <button class="jd-mode-btn active-mode" id="btnNone" onclick="setJDMode('none')">⚡ Skip JD</button>
-        <button class="jd-mode-btn" id="btnPaste" onclick="setJDMode('paste')">✏️ Paste</button>
-        <button class="jd-mode-btn" id="btnUpload" onclick="setJDMode('upload')">📄 PDF</button>
+        <button class="jd-mode-btn active-mode" id="btnNone" onclick="setJDMode('none')"> Skip JD</button>
+        <button class="jd-mode-btn" id="btnPaste" onclick="setJDMode('paste')"> Paste</button>
+        <button class="jd-mode-btn" id="btnUpload" onclick="setJDMode('upload')"> PDF</button>
       </div>
 
       <div id="jdNoneBox">
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;">
-          <div style="font-size:18px;margin-bottom:4px;">⚡</div>
+          <div style="font-size:18px;margin-bottom:4px;"></div>
           <div style="font-size:12px;font-weight:600;color:var(--text);">Role Intelligence Mode</div>
           <div style="font-size:11px;color:var(--text2);margin-top:4px;">Using built-in skill requirements for your target role</div>
         </div>
@@ -768,7 +768,7 @@
 
       <div id="jdUploadBox" style="display:none;">
         <div class="upload-box" id="jdUploadBoxInner" onclick="document.getElementById('jdFileInput').click()">
-          <div style="font-size:22px;">📋</div>
+          <div style="font-size:22px;"></div>
           <div class="upload-filename" id="jdUploadText">Click to upload JD PDF</div>
           <p>PDF files only</p>
         </div>
@@ -776,7 +776,7 @@
       </div>
 
       <button class="launch-btn" id="launchBtn" onclick="launchAnalysis()">
-        🚀 Launch Career Analysis
+         Launch Career Analysis
       </button>
 
     </div>
@@ -795,7 +795,7 @@
         <span id="statusText">Ready</span>
       </div>
       <button class="export-btn" id="exportBtn" onclick="exportToPDF()">
-        📄 Download Report
+         Download Report
       </button>
       <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
     </div>
@@ -803,7 +803,7 @@
 
   <div id="emptyState">
     <div class="empty-state">
-      <div class="empty-icon">🚀</div>
+      <div class="empty-icon"></div>
       <div class="empty-title">Welcome to CareerLaunch AI</div>
       <div class="empty-sub">Upload your resume, select your target role and click Launch. Job description is optional — our AI knows what each role requires.</div>
     </div>
@@ -811,7 +811,7 @@
 
   <!-- PRINT HEADER — only shows when printing -->
   <div class="print-header" id="printHeader">
-    <div style="font-size:28px;font-weight:800;">🚀 CareerLaunch AI</div>
+    <div style="font-size:28px;font-weight:800;"> CareerLaunch AI</div>
     <div style="font-size:15px;color:#444;margin-top:6px;">Career Analysis Report</div>
     <div style="font-size:12px;color:#888;margin-top:4px;" id="printDate"></div>
     <div style="font-size:13px;color:#444;margin-top:4px;" id="printRole"></div>
@@ -820,7 +820,7 @@
   <!-- DASHBOARD TAB -->
   <div class="tab-content" id="tab-dashboard">
     <div id="jdSourceBanner" class="info-banner" style="display:none;">
-      <span>⚡</span>
+      <span></span>
       <span id="jdSourceText"></span>
     </div>
 
@@ -841,8 +841,8 @@
         <h2>Career Readiness Score</h2>
         <p>Based on skills, experience and job match</p>
         <div style="margin-top:10px;">
-          <span class="metric-pill">⚡ <span id="levelPill">-</span></span>
-          <span class="metric-pill">🎯 <span id="matchPill">0%</span> Match</span>
+          <span class="metric-pill"> <span id="levelPill">-</span></span>
+          <span class="metric-pill"> <span id="matchPill">0%</span> Match</span>
         </div>
       </div>
     </div>
@@ -866,35 +866,35 @@
     </div>
 
     <div class="card">
-      <div class="card-title">📝 Profile Overview</div>
+      <div class="card-title">Profile Overview</div>
       <div class="overview-text" id="overviewText">-</div>
     </div>
 
     <div class="card">
-      <div class="card-title">🎯 Career Strategy</div>
+      <div class="card-title">Career Strategy</div>
       <div class="strategy-text" id="strategyText">-</div>
     </div>
   </div>
 
   <!-- WORKFLOW TAB -->
   <div class="tab-content" id="tab-workflow">
-    <div class="print-section-title">🤖 Agent Workflow</div>
-    <div class="section-title">🔄 Agent Pipeline</div>
+    <div class="print-section-title">Agent Workflow</div>
+    <div class="section-title">Agent Pipeline</div>
     <div class="pipeline" id="pipeline"></div>
-    <div class="section-title">📋 Agent Execution Logs</div>
+    <div class="section-title">Agent Execution Logs</div>
     <div id="agentLogs"></div>
   </div>
 
   <!-- SKILLS TAB -->
   <div class="tab-content" id="tab-skills">
-    <div class="print-section-title">🧠 Skill Intelligence</div>
+    <div class="print-section-title">Skill Intelligence</div>
     <div id="skillsSourceBanner" class="info-banner" style="display:none;">
-      <span>⚡</span>
+      <span></span>
       <span id="skillsSourceText"></span>
     </div>
     <div class="grid-2">
       <div class="card">
-        <div class="card-title">✅ Skills You Have</div>
+        <div class="card-title">Skills You Have</div>
         <div id="haveSkills"></div>
         <div class="progress-bar" style="margin-top:12px;">
           <div class="progress-fill" id="matchBar" style="width:0%"></div>
@@ -902,7 +902,7 @@
         <div style="font-size:12px;color:var(--text2);margin-top:4px;" id="matchBarLabel"></div>
       </div>
       <div class="card">
-        <div class="card-title">❌ Missing Skills</div>
+        <div class="card-title"> Missing Skills</div>
         <div id="missingSkills"></div>
       </div>
     </div>
@@ -910,11 +910,11 @@
 
   <!-- LEARNING TAB -->
   <div class="tab-content" id="tab-learning">
-    <div class="print-section-title">📚 Learning Plan</div>
+    <div class="print-section-title">Learning Plan</div>
     <div class="card" style="margin-bottom:16px;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div>
-          <div class="card-title">⏱️ Total Estimated Time</div>
+          <div class="card-title">Total Estimated Time</div>
           <div style="font-size:28px;font-weight:800;" id="totalWeeks">-</div>
         </div>
         <div style="font-size:48px;">📅</div>
@@ -925,21 +925,21 @@
 
   <!-- PROJECTS TAB -->
   <div class="tab-content" id="tab-projects">
-    <div class="print-section-title">💡 Project Recommendations & Certifications</div>
-    <div class="section-title">🔨 Recommended Projects</div>
+    <div class="print-section-title">Project Recommendations & Certifications</div>
+    <div class="section-title">Recommended Projects</div>
     <div id="projectsList"></div>
-    <div class="section-title" style="margin-top:24px;">🏆 Certifications</div>
+    <div class="section-title" style="margin-top:24px;">Certifications</div>
     <div id="certsList"></div>
   </div>
 
   <!-- INTERVIEW TAB -->
   <div class="tab-content" id="tab-interview">
-    <div class="print-section-title">🎤 Interview Preparation</div>
-    <div class="section-title">💻 Technical Questions</div>
+    <div class="print-section-title">Interview Preparation</div>
+    <div class="section-title">Technical Questions</div>
     <div id="techQuestions"></div>
-    <div class="section-title" style="margin-top:24px;">🤝 Behavioral Questions</div>
+    <div class="section-title" style="margin-top:24px;">Behavioral Questions</div>
     <div id="behavQuestions"></div>
-    <div class="section-title" style="margin-top:24px;">🔨 Project-Based Questions</div>
+    <div class="section-title" style="margin-top:24px;">Project-Based Questions</div>
     <div id="projQuestions"></div>
   </div>
 
@@ -984,7 +984,7 @@
         input.value = '';
         return;
       }
-      document.getElementById('uploadText').textContent = '✅ ' + input.files[0].name;
+      document.getElementById('uploadText').textContent = '' + input.files[0].name;
       document.getElementById('uploadBox').classList.add('uploaded');
     }
   }
@@ -1015,7 +1015,7 @@
         return;
       }
 
-      document.getElementById('jdUploadText').textContent = '✅ ' + input.files[0].name;
+      document.getElementById('jdUploadText').textContent = '' + input.files[0].name;
       document.getElementById('jdUploadBoxInner').classList.add('uploaded');
     }
   }
@@ -1256,7 +1256,7 @@
 
     const agentNames = ['Resume Agent','Match Agent','Gap Agent','Planner Agent','Strategist Agent','Interview Agent'];
     document.getElementById('pipeline').innerHTML = agentNames.map((n,i) =>
-      `<div class="pipeline-node done">✅ ${n}</div>${i < agentNames.length-1 ? '<div class="pipeline-arrow">→</div>' : ''}`
+      `<div class="pipeline-node done"> ${n}</div>${i < agentNames.length-1 ? '<div class="pipeline-arrow">→</div>' : ''}`
     ).join('');
 
     document.getElementById('agentLogs').innerHTML = data.agent_logs.map(log => `
@@ -1287,14 +1287,14 @@
         <div class="roadmap-item">
           <div class="step-num">${s.step}</div>
           <div class="step-skill">${s.skill.charAt(0).toUpperCase() + s.skill.slice(1)}</div>
-          <a href="${link}" target="_blank" class="learn-btn">📖 Learn</a>
-          <div class="step-weeks">⏱️ ${s.weeks} weeks</div>
+          <a href="${link}" target="_blank" class="learn-btn">Learn</a>
+          <div class="step-weeks"> ${s.weeks} weeks</div>
         </div>`;
     }).join('');
 
     document.getElementById('projectsList').innerHTML = data.project_recommendations.map((p,i) => `
       <div class="project-card">
-        <div class="project-title">🔨 Project ${i+1}: ${p.name}</div>
+        <div class="project-title"> Project ${i+1}: ${p.name}</div>
         <div class="project-desc">${p.description}</div>
         <div>${(p.skills_covered||[]).map(s => `<span class="skill-tag skill-have">${s}</span>`).join('')}</div>
       </div>
@@ -1316,7 +1316,7 @@
             <div style="font-weight:600;font-size:14px;">${c.name}</div>
             <div style="font-size:12px;color:var(--text2);margin-top:2px;">${c.provider} — ${c.relevance}</div>
           </div>
-          <a href="${link}" target="_blank" class="cert-btn">🎓 Get Certified</a>
+          <a href="${link}" target="_blank" class="cert-btn"> Get Certified</a>
         </div>`;
     }).join('');
 
@@ -1325,7 +1325,7 @@
       <div class="question-card">
         <span class="badge badge-${(q.difficulty||'medium').toLowerCase()}">${q.difficulty||'Medium'}</span>
         <div class="question-text">Q${i+1}. ${q.question}</div>
-        <div class="question-tip">💡 ${q.tip}</div>
+        <div class="question-tip"> ${q.tip}</div>
       </div>
     `).join('');
 
@@ -1333,7 +1333,7 @@
       <div class="question-card">
         <span class="badge badge-behavioral">Behavioral</span>
         <div class="question-text">Q${i+1}. ${q.question}</div>
-        <div class="question-tip">💡 ${q.tip}</div>
+        <div class="question-tip"> ${q.tip}</div>
       </div>
     `).join('');
 
@@ -1341,7 +1341,7 @@
       <div class="question-card">
         <span class="badge badge-project">Project</span>
         <div class="question-text">Q${i+1}. ${q.question}</div>
-        <div class="question-tip">💡 ${q.tip}</div>
+        <div class="question-tip"> ${q.tip}</div>
       </div>
     `).join('');
   }
