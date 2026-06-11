@@ -1,86 +1,227 @@
-# AI Adaptive Onboarding Engine
+#  CareerLaunch AI — Multi-Agent Career Intelligence Platform
 
-Two fully integrated layers in one project:
+> An AI-powered multi-agent career strategist that analyzes resumes, reasons about career goals, identifies skill gaps, creates personalized learning plans, recommends projects, and prepares users for interviews.
 
-| Layer | What it is |
-|---|---|
-| **PyTorch model** | Multi-Task Siamese Transformer trained from scratch — resume–JD similarity + multi-label skill extraction |
-| **Streamlit app** | Dark-themed web UI — upload PDFs, see match score, skill gaps, dependency-ordered roadmap, resume rewrite suggestions |
+![Career Dashboard](screenshots/dashboard.png)
 
 ---
 
-## Project Structure
+##  Microsoft Agents League Hackathon Submission
+
+**Team:** Solo Participant — Madhav  
+**Category:** Multi-Agent AI Systems  
+**Tech Stack:** Python · PyTorch · Flask · Groq LLM · HTML/CSS/JS
+
+---
+
+##  What Is CareerLaunch AI?
+
+CareerLaunch AI is a **multi-agent career intelligence platform** that transforms a raw resume into a complete career strategy using 6 specialized AI agents working in sequence.
+
+Unlike traditional resume analyzers that produce a single score, CareerLaunch AI simulates a team of career specialists — each agent reasoning about a different dimension of your career readiness and passing insights to the next.
+
+---
+
+##  The Multi-Agent Architecture
 
 ```
-Hackathon-Project/
-├── app/
-│   ├── engine.py                # Rule-based engine (80+ skills, alias map, roadmap)
-│   └── model_streamlit_app.py   # Full Streamlit UI
-├── checkpoints/                 # Model checkpoints go here
-├── data/
-│   ├── skill_vocab.py           # 128-skill vocabulary + aliases + dependency graph
-│   └── dataset.py               # Synthetic dataset pipeline
-├── models/
-│   ├── transformer.py           # Siamese Transformer from scratch (MHSA + FFN + mean pool)
-│   └── losses.py                # CosineEmbeddingLoss + BCEWithLogitsLoss + metrics
-├── training/
-│   ├── train.py                 # Multi-GPU fp16 training loop + checkpointing
-│   ├── inference.py             # OnboardingEngine high-level wrapper
-│   └── kaggle_train.ipynb       # Ready-to-run on Kaggle 2x T4 GPUs
-├── utils/
-│   ├── tokenizer.py             # Word-level tokenizer (from scratch)
-│   ├── text_utils.py            # PDF extraction + text cleaning
-│   └── roadmap.py               # BFS prerequisites + topological sort
-├── requirements.txt
-└── README.md
+User Input (Resume + Target Role)
+            ↓
+    ┌───────────────────┐
+    │    Orchestrator    │
+    │  (Shared State)    │
+    └───────────────────┘
+            ↓
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│  Agent 1          Agent 2          Agent 3          │
+│  Resume           Job Match        Skill Gap        │
+│  Intelligence  →  Agent        →   Agent            │
+│                                                     │
+│  Agent 4          Agent 5          Agent 6          │
+│  Learning      →  Career       →   Interview        │
+│  Planner          Strategist       Coach            │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+            ↓
+    Career Dashboard
+```
+
+### Agent Responsibilities
+
+| Agent | Role | Technology |
+|-------|------|------------|
+|  Resume Intelligence Agent | Parses resume, extracts skills, detects experience level | Custom Siamese Transformer |
+|  Job Match Agent | Compares resume skills vs job requirements, calculates match % | Custom ML Model |
+|  Skill Gap Agent | Identifies missing skills, prioritizes gaps by role | Rule-based + NLP |
+|  Learning Planner Agent | Builds dependency-ordered learning roadmap with time estimates | Graph-based Engine |
+|  Career Strategist Agent | Recommends projects, certifications, career next steps | Groq LLM (Llama 3) |
+|  Interview Coach Agent | Generates role-specific technical, behavioral, project questions | Groq LLM (Llama 3) |
+
+---
+
+##  Key Features
+
+- ** Role Intelligence Mode** — No job description needed. The system knows what each role requires built-in.
+- ** JD Upload Support** — Upload a PDF job description for precise matching.
+- ** Career Readiness Score** — A single 0–100 score synthesizing all agent outputs.
+- ** Learning Roadmap** — Dependency-ordered skill learning plan with Coursera links.
+- ** Project Recommendations** — 3 real projects tailored to your skill gaps.
+- ** Certification Guidance** — Role-specific certifications with direct links.
+- ** Interview Preparation** — Technical, behavioral, and project-based questions.
+- ** Download Report** — Export complete career analysis as PDF.
+- ** Dark Mode** — Full light/dark theme support.
+
+---
+
+##  Screenshots
+
+### Career Dashboard
+![Career Dashboard](screenshots/dashboard.png)
+
+### Agent Workflow
+![Agent Workflow](screenshots/workflow.png)
+
+### Learning Plan
+![Learning Plan](screenshots/learning.png)
+
+---
+
+##  Project Structure
+
+```
+careerlaunch-ai/
+│
+├── agents/                      # 6 specialized AI agents
+│   ├── base_agent.py            # Base class with logging
+│   ├── resume_agent.py          # Agent 1 — Resume parsing
+│   ├── match_agent.py           # Agent 2 — Job matching
+│   ├── skill_gap_agent.py       # Agent 3 — Gap detection
+│   ├── learning_planner.py      # Agent 4 — Roadmap generation
+│   ├── career_strategist.py     # Agent 5 — LLM strategy
+│   └── interview_coach.py       # Agent 6 — LLM interview prep
+│
+├── core/
+│   ├── orchestrator.py          # Runs all 6 agents in sequence
+│   └── state.py                 # Shared state object
+│
+├── models/                      # Custom Siamese Transformer
+├── checkpoints/                 # Trained model weights
+├── training/                    # Model training scripts
+├── utils/                       # Helper utilities
+│
+├── api.py                       # Flask REST API
+├── engine.py                    # Core skill extraction engine
+├── index.html                   # Frontend UI
+└── requirements.txt
 ```
 
 ---
 
-## Quick Start
+##  How To Run
+
+### Prerequisites
+- Python 3.9+
+- Groq API Key (free at [console.groq.com](https://console.groq.com))
+
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/madhav1431-create/career-launch-ai.git
+cd career-launch-ai
+
+# Install dependencies
 pip install -r requirements.txt
-streamlit run app/model_streamlit_app.py
+
+# Create .env file
+echo "GROQ_API_KEY=your_groq_api_key_here" > .env
 ```
 
-Runs in rule-based mode automatically when no checkpoint is present.
-
----
-
-## Run with Trained Model
+### Running The App
 
 ```bash
-mkdir checkpoints
-cp best_model.pt checkpoints/
-cp tokenizer.json checkpoints/
-streamlit run app/model_streamlit_app.py
+# Start the Flask API
+python api.py
+```
+
+Then open `index.html` in your browser.
+
+---
+
+##  How It Works
+
+1. **Upload Resume** — Upload your resume PDF
+2. **Select Target Role** — Choose from Data Scientist, ML Engineer, Data Analyst, Backend Developer, AI Engineer, Frontend Developer
+3. **Job Description (Optional)** — Paste or upload a JD, or skip to use Role Intelligence Mode
+4. **Launch** — All 6 agents run in sequence, each building on the previous agent's output
+5. **Explore Results** — Navigate through Dashboard, Skills, Learning Plan, Projects, and Interview Prep tabs
+6. **Download Report** — Export your complete career analysis as a PDF
+
+---
+
+##  The Shared State Architecture
+
+All agents communicate through a shared state object — the core pattern of modern agent frameworks:
+
+```python
+state = {
+    "resume_skills": [],       # Populated by Agent 1
+    "match_score": 0,          # Populated by Agent 2
+    "missing_skills": [],      # Populated by Agent 3
+    "roadmap": [],             # Populated by Agent 4
+    "career_strategy": "",     # Populated by Agent 5
+    "interview_questions": [], # Populated by Agent 6
+    "agent_logs": []           # Updated by all agents
+}
 ```
 
 ---
 
-## Architecture
+##  Why This Satisfies Multi-Agent Requirements
 
-```
-Resume ──┐                        ┌── Similarity head  → score [0,1]
-         ├── SharedTextEncoder ───┤
-JD     ──┘  (shared weights)      └── Skill head × 2  → 128-dim logits
-
-Encoder: Embedding → Sinusoidal PE → 3x Pre-LN Transformer → Mean pool → (B,256)
-Params:  ~6.5M  |  hidden=256  |  layers=3  |  heads=4  |  max_len=256
-```
-
----
-
-## Loss
-
-```
-L = CosineEmbeddingLoss  +  0.5 × BCEWithLogitsLoss (resume + JD skill heads)
-```
+| Microsoft Requirement | CareerLaunch AI Solution |
+|----------------------|--------------------------|
+| Multi-Agent System | 6 specialized agents with distinct roles |
+| Agent Reasoning | Each agent reasons about its specific domain |
+| Multi-step Planning | Resume → Skills → Gaps → Roadmap → Strategy |
+| Agent Collaboration | Shared state with sequential agent execution |
+| Safe AI | Deterministic roadmap + structured LLM outputs |
+| Real-world Impact | Solves career planning for millions of job seekers |
 
 ---
 
-## Contributors
+##  Tech Stack
 
-- [madhav1431-create](https://github.com/madhav1431-create)
-- [Mitul-dev](https://github.com/Mitul-dev) — Model upgrade & folder restructure
+| Layer | Technology |
+|-------|-----------|
+| Custom ML Model | PyTorch — Siamese Transformer for skill similarity |
+| LLM | Groq API — Llama 3.3 70B for strategy and interview prep |
+| Backend | Python + Flask |
+| Frontend | HTML + CSS + JavaScript |
+| PDF Parsing | pdfplumber |
+| Skill Graph | Custom dependency graph with topological sorting |
+
+---
+
+##  Model Details
+
+CareerLaunch AI uses a **custom-trained Multi-task Siamese Transformer** for:
+- Resume ↔ Job Description similarity scoring
+- Multi-label skill extraction from 60+ skill vocabulary
+- Experience level classification (Beginner / Mid / Senior)
+
+This is not a wrapper around existing APIs — the core matching intelligence is a model trained specifically for career document analysis.
+
+---
+
+##  Developer
+
+**Madhav**  
+GitHub: [@madhav1431-create](https://github.com/madhav1431-create)
+
+---
+
+##  License
+
+MIT License — feel free to use and build on this project.
