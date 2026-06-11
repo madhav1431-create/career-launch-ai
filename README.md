@@ -4,6 +4,9 @@
 
 ![Career Dashboard](screenshots/dashboard.png)
 
+## 🏗️ Architecture
+![Architecture Diagram](screenshots/architecture.png)
+
 ---
 
 ##  Microsoft Agents League Hackathon Submission
