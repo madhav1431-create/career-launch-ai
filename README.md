@@ -96,6 +96,9 @@ User Input (Resume + Target Role)
 ### Learning Plan
 ![Learning Plan](screenshots/learning.png)
 
+### Hiring Simulation
+![Hiring Simulation](screenshots/hiring.png)
+
 ---
 
 ##  Project Structure
