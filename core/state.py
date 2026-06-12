@@ -16,5 +16,29 @@ def create_state():
         "career_strategy": "",
         "interview_questions": [],
         "career_readiness_score": 0,
-        "agent_logs": []
+        "agent_logs": [],
+
+        # Hiring Simulation
+        "hiring_simulation": {
+            "ats": {"score": 0, "verdict": "", "concerns": []},
+            "recruiter": {"score": 0, "verdict": "", "concerns": []},
+            "hiring_manager": {"score": 0, "verdict": "", "concerns": []},
+            "technical_panel": {"score": 0, "verdict": "", "concerns": []},
+            "final_verdict": {
+                "decision": "",
+                "confidence": 0,
+                "reasoning": "",
+                "shortlisting_probability": 0
+            }
+        },
+
+        # Risk Assessment
+        "risk_assessment": {
+            "high_risks": [],
+            "medium_risks": [],
+            "low_risks": []
+        },
+
+        # Shortlisting Probability
+        "shortlisting_probability": 0
     }

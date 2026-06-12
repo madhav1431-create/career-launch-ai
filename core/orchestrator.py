@@ -5,6 +5,7 @@ from agents.skill_gap_agent import SkillGapAgent
 from agents.learning_planner import LearningPlannerAgent
 from agents.career_strategist import CareerStrategistAgent
 from agents.interview_coach import InterviewCoachAgent
+from agents.hiring_simulation import HiringSimulationAgent
 from engine import extract_text_from_pdf, detect_skills, get_role_skills
 
 class Orchestrator:
@@ -15,7 +16,8 @@ class Orchestrator:
             SkillGapAgent(),
             LearningPlannerAgent(),
             CareerStrategistAgent(),
-            InterviewCoachAgent()
+            InterviewCoachAgent(),
+            HiringSimulationAgent()
         ]
 
     def run(self, resume_path, jd_text, target_role):
@@ -25,8 +27,7 @@ class Orchestrator:
         state["resume_text"] = extract_text_from_pdf(resume_path)
         state["target_role"] = target_role
 
-        # If JD provided — use it
-        # If JD is empty — use role-based standard requirements
+        # If JD provided use it, else use role based requirements
         if jd_text and jd_text.strip():
             state["jd_text"] = jd_text
             state["jd_skills"] = detect_skills(jd_text.lower())
@@ -37,7 +38,7 @@ class Orchestrator:
             state["jd_skills"] = role_skills
             state["jd_source"] = "role_based"
 
-        # Run all 6 agents in sequence
+        # Run all 7 agents in sequence
         for agent in self.agents:
             state = agent.run(state)
 

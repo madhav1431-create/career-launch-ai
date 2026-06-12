@@ -1,10 +1,10 @@
 #  CareerLaunch AI — Multi-Agent Career Intelligence Platform
 
-> An AI-powered multi-agent career strategist that analyzes resumes, reasons about career goals, identifies skill gaps, creates personalized learning plans, recommends projects, and prepares users for interviews.
+> An AI-powered multi-agent career strategist that analyzes resumes, reasons about career goals, identifies skill gaps, creates personalized learning plans, recommends projects, simulates the hiring process, and prepares users for interviews.
 
 ![Career Dashboard](screenshots/dashboard.png)
 
-## 🏗️ Architecture
+##  Architecture
 ![Architecture Diagram](screenshots/architecture.png)
 
 ---
@@ -19,9 +19,9 @@
 
 ##  What Is CareerLaunch AI?
 
-CareerLaunch AI is a **multi-agent career intelligence platform** that transforms a raw resume into a complete career strategy using 6 specialized AI agents working in sequence.
+CareerLaunch AI is a **multi-agent career intelligence platform** that transforms a raw resume into a complete career strategy using 7 specialized AI agents working in sequence.
 
-Unlike traditional resume analyzers that produce a single score, CareerLaunch AI simulates a team of career specialists — each agent reasoning about a different dimension of your career readiness and passing insights to the next.
+Unlike traditional resume analyzers that produce a single score, CareerLaunch AI simulates a team of career specialists — each agent reasoning about a different dimension of your career readiness and passing insights to the next. It goes a step further than any typical resume checker by simulating the **entire hiring pipeline** — ATS, Recruiter, Hiring Manager, and Technical Panel — and predicting your real shortlisting probability.
 
 ---
 
@@ -35,19 +35,23 @@ User Input (Resume + Target Role)
     │  (Shared State)    │
     └───────────────────┘
             ↓
-┌─────────────────────────────────────────────────────┐
-│                                                     │
-│  Agent 1          Agent 2          Agent 3          │
-│  Resume           Job Match        Skill Gap        │
-│  Intelligence  →  Agent        →   Agent            │
-│                                                     │
-│  Agent 4          Agent 5          Agent 6          │
-│  Learning      →  Career       →   Interview        │
-│  Planner          Strategist       Coach            │
-│                                                     │
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                                                               │
+│  Agent 1          Agent 2          Agent 3                   │
+│  Resume           Job Match        Skill Gap                 │
+│  Intelligence  →  Agent        →   Agent                     │
+│                                                               │
+│  Agent 4          Agent 5          Agent 6                    │
+│  Learning      →  Career       →   Interview                 │
+│  Planner          Strategist       Coach                     │
+│                                                               │
+│  Agent 7                                                      │
+│  Hiring Simulation                                            │
+│  (ATS → Recruiter → Hiring Manager → Technical Panel)         │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
             ↓
-    Career Dashboard
+    Career Dashboard + Hiring Simulation
 ```
 
 ### Agent Responsibilities
@@ -58,8 +62,9 @@ User Input (Resume + Target Role)
 |  Job Match Agent | Compares resume skills vs job requirements, calculates match % | Custom ML Model |
 |  Skill Gap Agent | Identifies missing skills, prioritizes gaps by role | Rule-based + NLP |
 |  Learning Planner Agent | Builds dependency-ordered learning roadmap with time estimates | Graph-based Engine |
-|  Career Strategist Agent | Recommends projects, certifications, career next steps | Groq LLM (Llama 3) |
+|  Career Strategist Agent | Recommends projects, certifications, career strategy, and risk assessment | Groq LLM (Llama 3) |
 |  Interview Coach Agent | Generates role-specific technical, behavioral, project questions | Groq LLM (Llama 3) |
+|  Hiring Simulation Agent | Simulates ATS, Recruiter, Hiring Manager and Technical Panel review, producing a final hiring verdict and shortlisting probability | Groq LLM (Llama 3) |
 
 ---
 
@@ -68,6 +73,9 @@ User Input (Resume + Target Role)
 - ** Role Intelligence Mode** — No job description needed. The system knows what each role requires built-in.
 - ** JD Upload Support** — Upload a PDF job description for precise matching.
 - ** Career Readiness Score** — A single 0–100 score synthesizing all agent outputs.
+- ** AI Hiring Simulation** — Simulates a full hiring pipeline (ATS Scanner → Recruiter → Hiring Manager → Technical Panel) with a final hire/maybe/reject verdict.
+- ** Shortlisting Probability** — Predicts your real chance of getting shortlisted for the role.
+- ** Hiring Risk Assessment** — Highlights high, medium, and low risk factors that could affect your candidacy.
 - ** Learning Roadmap** — Dependency-ordered skill learning plan with Coursera links.
 - ** Project Recommendations** — 3 real projects tailored to your skill gaps.
 - ** Certification Guidance** — Role-specific certifications with direct links.
@@ -95,17 +103,18 @@ User Input (Resume + Target Role)
 ```
 careerlaunch-ai/
 │
-├── agents/                      # 6 specialized AI agents
+├── agents/                      # 7 specialized AI agents
 │   ├── base_agent.py            # Base class with logging
 │   ├── resume_agent.py          # Agent 1 — Resume parsing
 │   ├── match_agent.py           # Agent 2 — Job matching
 │   ├── skill_gap_agent.py       # Agent 3 — Gap detection
 │   ├── learning_planner.py      # Agent 4 — Roadmap generation
-│   ├── career_strategist.py     # Agent 5 — LLM strategy
-│   └── interview_coach.py       # Agent 6 — LLM interview prep
+│   ├── career_strategist.py     # Agent 5 — LLM strategy + risk assessment
+│   ├── interview_coach.py       # Agent 6 — LLM interview prep
+│   └── hiring_simulation.py     # Agent 7 — LLM hiring pipeline simulation
 │
 ├── core/
-│   ├── orchestrator.py          # Runs all 6 agents in sequence
+│   ├── orchestrator.py          # Runs all 7 agents in sequence
 │   └── state.py                 # Shared state object
 │
 ├── models/                      # Custom Siamese Transformer
@@ -157,9 +166,10 @@ Then open `index.html` in your browser.
 1. **Upload Resume** — Upload your resume PDF
 2. **Select Target Role** — Choose from Data Scientist, ML Engineer, Data Analyst, Backend Developer, AI Engineer, Frontend Developer
 3. **Job Description (Optional)** — Paste or upload a JD, or skip to use Role Intelligence Mode
-4. **Launch** — All 6 agents run in sequence, each building on the previous agent's output
-5. **Explore Results** — Navigate through Dashboard, Skills, Learning Plan, Projects, and Interview Prep tabs
-6. **Download Report** — Export your complete career analysis as a PDF
+4. **Launch** — All 7 agents run in sequence, each building on the previous agent's output
+5. **Explore Results** — Navigate through Dashboard, Hiring Simulation, Agent Workflow, Skills, Learning Plan, Projects, and Interview Prep tabs
+6. **Hiring Simulation** — See how an ATS, Recruiter, Hiring Manager, and Technical Panel would evaluate your profile, along with a final verdict and shortlisting probability
+7. **Download Report** — Export your complete career analysis as a PDF
 
 ---
 
@@ -169,13 +179,16 @@ All agents communicate through a shared state object — the core pattern of mod
 
 ```python
 state = {
-    "resume_skills": [],       # Populated by Agent 1
-    "match_score": 0,          # Populated by Agent 2
-    "missing_skills": [],      # Populated by Agent 3
-    "roadmap": [],             # Populated by Agent 4
-    "career_strategy": "",     # Populated by Agent 5
-    "interview_questions": [], # Populated by Agent 6
-    "agent_logs": []           # Updated by all agents
+    "resume_skills": [],          # Populated by Agent 1
+    "match_score": 0,              # Populated by Agent 2
+    "missing_skills": [],          # Populated by Agent 3
+    "roadmap": [],                  # Populated by Agent 4
+    "career_strategy": "",          # Populated by Agent 5
+    "risk_assessment": {},           # Populated by Agent 5
+    "interview_questions": [],       # Populated by Agent 6
+    "hiring_simulation": {},          # Populated by Agent 7
+    "shortlisting_probability": 0,    # Populated by Agent 7
+    "agent_logs": []                   # Updated by all agents
 }
 ```
 
@@ -185,12 +198,12 @@ state = {
 
 | Microsoft Requirement | CareerLaunch AI Solution |
 |----------------------|--------------------------|
-| Multi-Agent System | 6 specialized agents with distinct roles |
+| Multi-Agent System | 7 specialized agents with distinct roles |
 | Agent Reasoning | Each agent reasons about its specific domain |
-| Multi-step Planning | Resume → Skills → Gaps → Roadmap → Strategy |
+| Multi-step Planning | Resume → Skills → Gaps → Roadmap → Strategy → Hiring Simulation |
 | Agent Collaboration | Shared state with sequential agent execution |
 | Safe AI | Deterministic roadmap + structured LLM outputs |
-| Real-world Impact | Solves career planning for millions of job seekers |
+| Real-world Impact | Solves career planning and hiring readiness for millions of job seekers |
 
 ---
 
@@ -199,7 +212,7 @@ state = {
 | Layer | Technology |
 |-------|-----------|
 | Custom ML Model | PyTorch — Siamese Transformer for skill similarity |
-| LLM | Groq API — Llama 3.3 70B for strategy and interview prep |
+| LLM | Groq API — Llama 3.3 70B for strategy, interview prep, and hiring simulation |
 | Backend | Python + Flask |
 | Frontend | HTML + CSS + JavaScript |
 | PDF Parsing | pdfplumber |

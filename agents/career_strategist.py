@@ -33,8 +33,19 @@ Return ONLY a valid JSON object with exactly this structure, nothing else:
         {{"name": "cert name", "provider": "provider name", "relevance": "one line reason"}},
         {{"name": "cert name", "provider": "provider name", "relevance": "one line reason"}}
     ],
-    "career_advice": "2-3 sentences of specific career advice for this person"
+    "career_advice": "2-3 sentences of specific career advice for this person",
+    "risk_assessment": {{
+        "high_risks": ["risk 1", "risk 2"],
+        "medium_risks": ["risk 1", "risk 2"],
+        "low_risks": ["risk 1", "risk 2"]
+    }}
 }}
+
+For risk_assessment:
+- high_risks: Critical gaps that would likely cause rejection (max 3 items)
+- medium_risks: Areas that need improvement but not dealbreakers (max 3 items)
+- low_risks: Minor gaps that are easy to address (max 3 items)
+Each risk should be a short specific statement like "No deployment experience" or "Weak SQL knowledge"
 """
 
         try:
@@ -42,12 +53,11 @@ Return ONLY a valid JSON object with exactly this structure, nothing else:
                 model="llama-3.3-70b-versatile",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
-                max_tokens=1000
+                max_tokens=1200
             )
 
             raw = response.choices[0].message.content.strip()
 
-            # Clean response if it has markdown code blocks
             if "```json" in raw:
                 raw = raw.split("```json")[1].split("```")[0].strip()
             elif "```" in raw:
@@ -58,6 +68,11 @@ Return ONLY a valid JSON object with exactly this structure, nothing else:
             state["project_recommendations"] = result.get("recommended_projects", [])
             state["certifications"] = result.get("certifications", [])
             state["career_strategy"] = result.get("career_advice", "")
+            state["risk_assessment"] = result.get("risk_assessment", {
+                "high_risks": [],
+                "medium_risks": [],
+                "low_risks": []
+            })
 
             self.log(state, f"Generated {len(state['project_recommendations'])} project recommendations")
 
@@ -66,5 +81,10 @@ Return ONLY a valid JSON object with exactly this structure, nothing else:
             state["project_recommendations"] = []
             state["certifications"] = []
             state["career_strategy"] = "Career strategy unavailable at this time."
+            state["risk_assessment"] = {
+                "high_risks": [],
+                "medium_risks": [],
+                "low_risks": []
+            }
 
         return state

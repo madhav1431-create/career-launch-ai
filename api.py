@@ -16,7 +16,6 @@ def validate_jd_content(text):
 
     text_lower = text.lower()
 
-    # Job description keywords
     jd_keywords = [
         'responsibilities', 'requirements', 'qualifications', 'experience',
         'skills', 'job', 'role', 'position', 'candidate', 'apply',
@@ -26,7 +25,6 @@ def validate_jd_content(text):
         'required', 'looking for', 'we are', 'you will', 'must have'
     ]
 
-    # Resume keywords — if too many found, it's a resume not a JD
     resume_keywords = [
         'education', 'objective', 'summary', 'projects', 'internship',
         'cgpa', 'gpa', 'college', 'university', 'institute',
@@ -38,14 +36,12 @@ def validate_jd_content(text):
     jd_score = sum(1 for kw in jd_keywords if kw in text_lower)
     resume_score = sum(1 for kw in resume_keywords if kw in text_lower)
 
-    # If it looks more like a resume than a JD
     if resume_score >= 4 and resume_score > jd_score:
         return {
             'valid': False,
             'message': 'This file looks like a Resume, not a Job Description. Please upload the correct JD file.'
         }
 
-    # If no JD keywords found at all
     if jd_score < 2:
         return {
             'valid': False,
@@ -53,6 +49,7 @@ def validate_jd_content(text):
         }
 
     return {'valid': True, 'message': 'OK'}
+
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
@@ -65,7 +62,7 @@ def analyze():
         if not resume_file:
             return jsonify({'error': 'No resume uploaded'}), 400
 
-      # Save resume temporarily
+        # Save resume temporarily
         resume_path = 'temp_resume.pdf'
         resume_file.save(resume_path)
 
@@ -83,10 +80,7 @@ def analyze():
                     'error': 'The Job Description file appears to be the same as your Resume. Please upload a different PDF.'
                 }), 400
 
-       # Handle JD — three cases:
-        # 1. JD PDF uploaded
-        # 2. JD text pasted
-        # 3. No JD — use role based requirements
+        # Handle JD
         if jd_file and jd_file.filename != '':
             jd_path = 'temp_jd.pdf'
             jd_file.save(jd_path)
@@ -94,18 +88,14 @@ def analyze():
             if os.path.exists(jd_path):
                 os.remove(jd_path)
 
-            # Validate JD content
             jd_validation = validate_jd_content(jd_text)
             if not jd_validation['valid']:
                 return jsonify({'error': jd_validation['message']}), 400
 
-        # Validate pasted JD text too
         if jd_text and jd_text.strip() and not (jd_file and jd_file.filename != ''):
             jd_validation = validate_jd_content(jd_text)
             if not jd_validation['valid']:
                 return jsonify({'error': jd_validation['message']}), 400
-        # if jd_text is already set from form, use it
-        # if both are empty, orchestrator will use role-based skills
 
         # Run orchestrator
         orchestrator = Orchestrator()
@@ -130,7 +120,10 @@ def analyze():
             'career_strategy': state['career_strategy'],
             'interview_questions': state['interview_questions'],
             'career_readiness_score': state['career_readiness_score'],
-            'agent_logs': state['agent_logs']
+            'agent_logs': state['agent_logs'],
+            'hiring_simulation': state['hiring_simulation'],
+            'risk_assessment': state['risk_assessment'],
+            'shortlisting_probability': state['shortlisting_probability']
         })
 
     except Exception as e:
