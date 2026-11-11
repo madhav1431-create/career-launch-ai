@@ -1,137 +1,129 @@
+from io import BytesIO
 import os
-from flask import Flask, request, jsonify
+from pathlib import Path
+
+from dotenv import load_dotenv
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
+from werkzeug.exceptions import RequestEntityTooLarge
+
 from core.orchestrator import Orchestrator
-from engine import extract_text_from_pdf
+from engine import UnreadablePDFError, extract_text_from_pdf, role_skill_requirements
+
+
+load_dotenv()
+ROOT = Path(__file__).resolve().parent
+EXAMPLES = ROOT / "examples"
+MAX_PDF_BYTES = 8 * 1024 * 1024
+MAX_JOB_TEXT = 16_000
+RESULT_FIELDS = (
+    "target_role", "resume_skills", "jd_skills", "jd_source", "matched_skills",
+    "skill_evidence", "requirement_evidence", "match_score", "overview",
+    "missing_skills", "roadmap", "project_recommendations", "certifications",
+    "career_strategy", "interview_questions", "career_readiness_score",
+    "agent_logs", "hiring_simulation", "risk_assessment", "ai_enabled",
+)
 
 app = Flask(__name__)
-CORS(app)
-
-def validate_jd_content(text):
-    if not text or len(text.strip()) < 50:
-        return {
-            'valid': False,
-            'message': 'The uploaded file appears to be empty or too short to be a Job Description.'
-        }
-
-    text_lower = text.lower()
-
-    jd_keywords = [
-        'responsibilities', 'requirements', 'qualifications', 'experience',
-        'skills', 'job', 'role', 'position', 'candidate', 'apply',
-        'team', 'work', 'develop', 'engineer', 'analyst', 'manager',
-        'salary', 'benefits', 'full-time', 'part-time', 'remote',
-        'bachelor', 'degree', 'years of experience', 'preferred',
-        'required', 'looking for', 'we are', 'you will', 'must have'
-    ]
-
-    resume_keywords = [
-        'education', 'objective', 'summary', 'projects', 'internship',
-        'cgpa', 'gpa', 'college', 'university', 'institute',
-        'trained', 'coursework', 'extracurricular', 'hobbies',
-        'declaration', 'date of birth', 'languages known',
-        'personal details', 'contact', 'linkedin', 'github'
-    ]
-
-    jd_score = sum(1 for kw in jd_keywords if kw in text_lower)
-    resume_score = sum(1 for kw in resume_keywords if kw in text_lower)
-
-    if resume_score >= 4 and resume_score > jd_score:
-        return {
-            'valid': False,
-            'message': 'This file looks like a Resume, not a Job Description. Please upload the correct JD file.'
-        }
-
-    if jd_score < 2:
-        return {
-            'valid': False,
-            'message': 'This file does not appear to be a Job Description. Please upload a valid JD PDF or paste the job description text.'
-        }
-
-    return {'valid': True, 'message': 'OK'}
+app.config["MAX_CONTENT_LENGTH"] = 2 * MAX_PDF_BYTES + 64 * 1024
+app.config["MAX_FORM_PARTS"] = 10
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv("CAREERLAUNCH_ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+if allowed_origins:
+    CORS(app, resources={r"/analyze": {"origins": allowed_origins}})
 
 
-@app.route('/analyze', methods=['POST'])
+class InvalidUpload(ValueError):
+    pass
+
+
+def read_pdf_upload(upload, label):
+    """Read one bounded upload into request-local memory."""
+    data = upload.stream.read(MAX_PDF_BYTES + 1)
+    if len(data) > MAX_PDF_BYTES:
+        raise InvalidUpload(f"{label} must be 8 MB or smaller.")
+    if not data.startswith(b"%PDF-"):
+        raise InvalidUpload(f"{label} must be a PDF.")
+    return data
+
+
+def result_response(state, *, demo=False):
+    return jsonify(success=True, demo=demo, **{key: state[key] for key in RESULT_FIELDS})
+
+
+@app.after_request
+def set_response_headers(response):
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    if request.endpoint in {"analyze", "demo"}:
+        response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def request_too_large(_error):
+    return jsonify(error="Upload is too large. Use PDFs of 8 MB or smaller."), 413
+
+
+@app.get("/")
+def index():
+    return send_from_directory(ROOT, "index.html")
+
+
+@app.post("/analyze")
 def analyze():
+    resume = request.files.get("resume")
+    if not resume or not resume.filename:
+        return jsonify(error="Upload your resume as a PDF."), 400
+
+    target_role = request.form.get("target_role", "Data Scientist").strip()
+    if target_role not in role_skill_requirements:
+        return jsonify(error="Select a supported target role."), 400
+
+    job_text = request.form.get("jd_text", "").strip()
+    job_file = request.files.get("jd_file")
+
     try:
-        resume_file = request.files.get('resume')
-        jd_text = request.form.get('jd_text', '').strip()
-        target_role = request.form.get('target_role', 'Data Scientist')
-        jd_file = request.files.get('jd_file')
+        resume_data = read_pdf_upload(resume, "Resume")
+        if job_file and job_file.filename:
+            job_data = read_pdf_upload(job_file, "Job description")
+            if resume_data == job_data:
+                raise InvalidUpload("Upload a different PDF for the job description.")
+            try:
+                with BytesIO(job_data) as job_stream:
+                    job_text = extract_text_from_pdf(job_stream, preserve_case=True)
+            except UnreadablePDFError as error:
+                raise InvalidUpload(f"Job description: {error}") from error
 
-        if not resume_file:
-            return jsonify({'error': 'No resume uploaded'}), 400
+        if len(job_text) > MAX_JOB_TEXT:
+            raise InvalidUpload("Job description must be 16,000 characters or fewer.")
+        with BytesIO(resume_data) as resume_stream:
+            try:
+                state = Orchestrator().run(resume_stream, job_text, target_role)
+            except UnreadablePDFError as error:
+                raise InvalidUpload(f"Resume: {error}") from error
+    except InvalidUpload as error:
+        return jsonify(error=str(error)), 400
 
-        # Save resume temporarily
-        resume_path = 'temp_resume.pdf'
-        resume_file.save(resume_path)
+    return result_response(state)
 
-        # Validate JD file is not the same as resume
-        if jd_file and jd_file.filename != '':
-            resume_file.seek(0, 2)
-            jd_file.seek(0, 2)
-            resume_size = resume_file.tell()
-            jd_size = jd_file.tell()
-            resume_file.seek(0)
-            jd_file.seek(0)
 
-            if resume_size == jd_size:
-                return jsonify({
-                    'error': 'The Job Description file appears to be the same as your Resume. Please upload a different PDF.'
-                }), 400
+@app.post("/demo")
+def demo():
+    job_text = (EXAMPLES / "demo_job_description.txt").read_text(encoding="utf-8")
+    state = Orchestrator().run(
+        EXAMPLES / "demo_resume.pdf", job_text, "Data Analyst", include_ai=False
+    )
+    return result_response(state, demo=True)
 
-        # Handle JD
-        if jd_file and jd_file.filename != '':
-            jd_path = 'temp_jd.pdf'
-            jd_file.save(jd_path)
-            jd_text = extract_text_from_pdf(jd_path)
-            if os.path.exists(jd_path):
-                os.remove(jd_path)
 
-            jd_validation = validate_jd_content(jd_text)
-            if not jd_validation['valid']:
-                return jsonify({'error': jd_validation['message']}), 400
-
-        if jd_text and jd_text.strip() and not (jd_file and jd_file.filename != ''):
-            jd_validation = validate_jd_content(jd_text)
-            if not jd_validation['valid']:
-                return jsonify({'error': jd_validation['message']}), 400
-
-        # Run orchestrator
-        orchestrator = Orchestrator()
-        state = orchestrator.run(resume_path, jd_text, target_role)
-
-        if os.path.exists(resume_path):
-            os.remove(resume_path)
-
-        return jsonify({
-            'success': True,
-            'target_role': state['target_role'],
-            'resume_skills': state['resume_skills'],
-            'jd_skills': state['jd_skills'],
-            'jd_source': state['jd_source'],
-            'match_score': state['match_score'],
-            'level': state['level'],
-            'overview': state['overview'],
-            'missing_skills': state['missing_skills'],
-            'roadmap': state['roadmap'],
-            'project_recommendations': state['project_recommendations'],
-            'certifications': state['certifications'],
-            'career_strategy': state['career_strategy'],
-            'interview_questions': state['interview_questions'],
-            'career_readiness_score': state['career_readiness_score'],
-            'agent_logs': state['agent_logs'],
-            'hiring_simulation': state['hiring_simulation'],
-            'risk_assessment': state['risk_assessment'],
-            'shortlisting_probability': state['shortlisting_probability']
-        })
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/health', methods=['GET'])
+@app.get("/health")
 def health():
-    return jsonify({'status': 'CareerLaunch AI is running'})
+    return jsonify(status="CareerLaunch AI is running")
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+
+if __name__ == "__main__":
+    app.run(host="127.0.0.1", port=5000)

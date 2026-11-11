@@ -7,17 +7,18 @@ class MatchAgent(BaseAgent):
     def run(self, state: dict):
         self.log(state, "Analyzing job description match...")
 
-        resume_skills = state["resume_skills"]
+        resume_skills = set(state["resume_skills"])
         jd_skills = state["jd_skills"]
 
         if len(jd_skills) == 0:
             state["match_score"] = 0
-            self.log(state, "No JD skills found")
+            self.log(state, "No supported skills detected in the target requirements")
             return state
 
         matched = [s for s in jd_skills if s in resume_skills]
         score = round((len(matched) / len(jd_skills)) * 100)
 
+        state["matched_skills"] = matched
         state["match_score"] = score
-        self.log(state, f"Match Score: {score}% — {len(matched)}/{len(jd_skills)} skills matched")
+        self.log(state, f"Matched {len(matched)} of {len(jd_skills)} target skills ({score}%)")
         return state

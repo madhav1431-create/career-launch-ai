@@ -1,0 +1,112 @@
+[
+  {
+    "id": "frontend",
+    "description": "Maintain an accessible web dashboard. The position requires JavaScript, React and CSS.",
+    "skills": ["javascript", "react", "css"],
+    "resumes": [
+      {
+        "id": "ui-developer",
+        "text": "Built a scheduling dashboard in JS and React. Used CSS grid to make the calendar work on mobile.",
+        "skills": ["javascript", "react", "css"]
+      },
+      {
+        "id": "javascript-reporting",
+        "text": "Built dashboards with JavaScript. Published release notes on GitHub.",
+        "skills": ["javascript", "github"]
+      },
+      {
+        "id": "java-service",
+        "text": "Created a Java service for payroll reports. I go through support tickets each morning.",
+        "skills": ["java"]
+      }
+    ]
+  },
+  {
+    "id": "ml-operations",
+    "description": "Operate model releases and monitor production incidents. Required skills include Python, Kubernetes, Docker and MLOps.",
+    "skills": ["python", "kubernetes", "docker", "mlops"],
+    "resumes": [
+      {
+        "id": "model-deployments",
+        "text": "Owned MLOps for a forecasting service. Wrote Python release checks and deployed Docker images to K8s.",
+        "skills": ["mlops", "python", "docker", "kubernetes"]
+      },
+      {
+        "id": "local-deployments",
+        "text": "Packaged a batch service in Docker and wrote Python scripts to monitor jobs. I have not used Kubernetes.",
+        "skills": ["docker", "python"]
+      },
+      {
+        "id": "dashboard-analyst",
+        "text": "Built weekly finance reports with Tableau and Excel. Reviewed the results with the reporting team.",
+        "skills": ["tableau", "excel"]
+      }
+    ]
+  },
+  {
+    "id": "data-analysis",
+    "description": "The analytics role requires Python, SQL and Power BI for recurring business reports.",
+    "skills": ["python", "sql", "power bi"],
+    "resumes": [
+      {
+        "id": "report-automation",
+        "text": "Automated revenue reports with Python and SQL. Published the weekly summary in Power BI.",
+        "skills": ["python", "sql", "power bi"]
+      },
+      {
+        "id": "database-reporting",
+        "text": "Built billing extracts using SQL on Postgres. Wrote a Java utility to compare monthly exports.",
+        "skills": ["sql", "postgresql", "java"]
+      },
+      {
+        "id": "desktop-applications",
+        "text": "Maintained a C++ desktop client and a C# reporting utility. Used Git for release branches.",
+        "skills": ["c++", "c#", "git"]
+      }
+    ]
+  },
+  {
+    "id": "applied-ml",
+    "description": "Build and evaluate machine learning models. The role requires Python, statistics and scikit-learn.",
+    "skills": ["machine learning", "python", "statistics", "scikit-learn"],
+    "resumes": [
+      {
+        "id": "classifier-evaluation",
+        "text": "Trained ML classifiers in Python with sklearn. Used statistics to compare their error rates.",
+        "skills": ["machine learning", "python", "scikit-learn", "statistics"]
+      },
+      {
+        "id": "statistical-research",
+        "text": "Used R for statistics. Wrote Python scripts to combine the monthly reports before analysis.",
+        "skills": ["r", "statistics", "python"]
+      },
+      {
+        "id": "coordination",
+        "text": "Coordinated a weekly workshop, tracked deadlines and wrote status notes for the project team.",
+        "skills": []
+      }
+    ]
+  },
+  {
+    "id": "product-analytics",
+    "description": "The position requires SQL, Python, A/B testing and time series analysis to measure product adoption.",
+    "skills": ["sql", "python", "a/b testing", "time series"],
+    "resumes": [
+      {
+        "id": "experiment-analyst",
+        "text": "Ran A/B testing on an onboarding flow, wrote SQL to track conversions and analyzed time-series data.",
+        "skills": ["a/b testing", "sql", "time series"]
+      },
+      {
+        "id": "pipeline-analyst",
+        "text": "Used SQL and Python to automate a weekly billing report.",
+        "skills": ["sql", "python"]
+      },
+      {
+        "id": "content-analyst",
+        "text": "Tracked publication dates in Excel and organized feedback from editors.",
+        "skills": ["excel"]
+      }
+    ]
+  }
+]

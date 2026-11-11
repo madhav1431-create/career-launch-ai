@@ -1,0 +1,7 @@
+Junior Data Analyst | Fictional demo role
+
+Use SQL to build and validate recurring reports.
+Clean and summarize datasets with Python and Pandas.
+Build dashboards in Power BI to explain trends to operations teams.
+Apply basic statistics to compare performance across regions.
+Use Git to document changes to the reporting workflow.

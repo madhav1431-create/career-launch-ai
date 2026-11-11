@@ -1,5 +1,5 @@
 from agents.base_agent import BaseAgent
-from engine import detect_skills
+from engine import detect_skill_evidence
 
 class ResumeAgent(BaseAgent):
     def __init__(self):
@@ -9,9 +9,9 @@ class ResumeAgent(BaseAgent):
         self.log(state, "Starting resume analysis...")
 
         text = state["resume_text"]
-        skills = detect_skills(text)
+        evidence = detect_skill_evidence(text)
+        state["skill_evidence"] = evidence
+        state["resume_skills"] = list(evidence)
 
-        state["resume_skills"] = skills
-
-        self.log(state, f"Extracted {len(skills)} skills from resume")
+        self.log(state, f"Detected skill terms in the resume: {len(evidence)}")
         return state

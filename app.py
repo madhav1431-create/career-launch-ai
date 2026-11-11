@@ -1,6 +1,7 @@
 import streamlit as st
 import time
 from core.orchestrator import Orchestrator
+from engine import UnreadablePDFError
 
 # Page config
 st.set_page_config(
@@ -104,23 +105,9 @@ if analyze_btn:
     elif jd_text.strip() == "":
         st.error("Please paste a job description.")
     else:
-        # Save uploaded resume temporarily
-        with open("temp_resume.pdf", "wb") as f:
-            f.write(resume_file.read())
-
         # Show agent workflow live
         st.markdown("## 🤖 Agent Workflow — Live")
         agent_container = st.empty()
-
-        logs_so_far = []
-        agent_names = [
-            "Resume Intelligence Agent",
-            "Job Match Agent",
-            "Skill Gap Agent",
-            "Learning Planner Agent",
-            "Career Strategist Agent",
-            "Interview Coach Agent"
-        ]
 
         def show_logs(logs):
             log_html = '<div class="agent-log">'
@@ -129,16 +116,20 @@ if analyze_btn:
             log_html += '</div>'
             agent_container.markdown(log_html, unsafe_allow_html=True)
 
-        with st.spinner("Running all 6 agents..."):
-            orchestrator = Orchestrator()
-            state = orchestrator.run("temp_resume.pdf", jd_text, target_role)
+        with st.spinner("Analyzing your resume..."):
+            resume_file.seek(0)
+            try:
+                state = Orchestrator().run(resume_file, jd_text, target_role)
+            except UnreadablePDFError as error:
+                st.error(str(error))
+                st.stop()
 
         st.session_state.state = state
         st.session_state.ran = True
 
         # Show final logs
         show_logs(state["agent_logs"])
-        st.success("✅ All 6 agents completed successfully!")
+        st.success("Analysis complete.")
         time.sleep(1)
         st.rerun()
 
@@ -163,15 +154,13 @@ if st.session_state.ran and st.session_state.state:
         with col1:
             st.markdown(f"""
             <div class="score-card">
-                <div>Career Readiness Score</div>
-                <div class="score-number">{state['career_readiness_score']}</div>
-                <div>out of 100</div>
+                <div>Target Skill Coverage</div>
+                <div class="score-number">{state['match_score']}%</div>
             </div>
             """, unsafe_allow_html=True)
 
         with col2:
-            st.metric("Match Score", f"{state['match_score']}%")
-            st.metric("Experience Level", state['level'])
+            st.metric("Matched Skills", f"{len(state['matched_skills'])} of {len(state['jd_skills'])}")
 
         with col3:
             st.metric("Skills Detected", len(state['resume_skills']))
@@ -206,11 +195,12 @@ if st.session_state.ran and st.session_state.state:
             ("4", "Learning Planner Agent", f"{len(state['roadmap'])} step roadmap"),
             ("5", "Career Strategist Agent", f"{len(state['project_recommendations'])} projects recommended"),
             ("6", "Interview Coach Agent", "Interview questions generated"),
+            ("7", "Hiring Simulation Agent", "Practice feedback prepared"),
         ]
 
         for num, name, result in agents_flow:
             st.markdown(f"**Agent {num}** — {name} → `{result}`")
-            if num != "6":
+            if num != "7":
                 st.markdown("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⬇️")
 
     # TAB 3 — Skill Intelligence
@@ -220,12 +210,13 @@ if st.session_state.ran and st.session_state.state:
         col1, col2 = st.columns(2)
 
         with col1:
-            st.markdown("### ✅ Skills You Have")
+            st.markdown("### Skills Mentioned in Your Resume")
             for skill in state['resume_skills']:
                 st.markdown(f"🟢 {skill.title()}")
+                st.text(state["skill_evidence"][skill])
 
         with col2:
-            st.markdown("### ❌ Missing Skills")
+            st.markdown("### Target Skills Without a Resume Match")
             for skill in state['missing_skills']:
                 st.markdown(f"🔴 {skill.title()}")
 

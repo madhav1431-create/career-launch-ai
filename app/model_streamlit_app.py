@@ -1,27 +1,16 @@
-"""
-model_streamlit_app.py
-───────────────────────
-Premium SaaS-level Streamlit frontend for the AI Adaptive Onboarding Engine.
-
-Architecture
-────────────
-  UI (this file) → OnboardingEngine.analyze() → result dict → render dashboard
-
-All analysis results are stored in st.session_state so they survive
-Streamlit's top-to-bottom rerun cycle.  The model is processed exactly
-ONCE per click via the "Analyze" button guard.
-"""
+"""Streamlit demo for the CareerLaunch AI PyTorch checkpoint."""
 
 import sys
 import os
 import tempfile
+from html import escape
+from pathlib import Path
 
 import streamlit as st
 
 # ── Page config (first Streamlit call) ────────────────────────────────────────
 st.set_page_config(
-    page_title="AI Adaptive Onboarding Engine",
-    page_icon="🧠",
+    page_title="CareerLaunch AI | Model Demo",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -33,6 +22,13 @@ if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
 from training.inference import OnboardingEngine
+
+
+SAMPLE_RESUME = """Built a reporting service in Python and FastAPI.
+Moved billing data into PostgreSQL and packaged the service with Docker.
+Used Git for release branches and wrote tests for the reporting endpoints."""
+SAMPLE_JOB = """The backend engineer maintains internal data services.
+Required skills include Python, FastAPI, PostgreSQL, Docker and Kubernetes."""
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -202,18 +198,6 @@ div.stButton > button:first-child {
     font-size: 1.05rem;
     font-weight: 400;
     margin: 0;
-}
-.hero-badge {
-    display: inline-block;
-    margin-top: 14px;
-    padding: 5px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    background: rgba(59,130,246,0.12);
-    color: var(--accent-blue);
-    border: 1px solid rgba(59,130,246,0.25);
 }
 
 /* ── Section Headers ─────────────────────────────────────────────────────── */
@@ -575,25 +559,9 @@ def _clear_results() -> None:
 # HELPERS
 # ═════════════════════════════════════════════════════════════════════════════
 
-def _save_upload_to_tempfile(uploaded_file) -> str | None:
-    if uploaded_file is None:
-        return None
-    try:
-        data = uploaded_file.read()
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-            tmp.write(data)
-            return tmp.name
-    except Exception:
-        return None
-
-
-def _score_color(score: float) -> str:
-    """Return a CSS color string based on match score."""
-    if score >= 0.7:
-        return "var(--accent-green)"
-    if score >= 0.4:
-        return "var(--accent-amber)"
-    return "var(--accent-red)"
+def _save_upload(uploaded_file, path: Path) -> Path:
+    path.write_bytes(uploaded_file.getvalue())
+    return path
 
 
 def _render_skill_badges(skills: list[str], css_class: str) -> str:
@@ -601,7 +569,7 @@ def _render_skill_badges(skills: list[str], css_class: str) -> str:
     if not skills:
         return '<p style="color:var(--text-muted); font-size:14px; font-style:italic;">None detected</p>'
     badges = "".join(
-        f'<span class="skill-badge {css_class}">{s}</span>' for s in skills
+        f'<span class="skill-badge {css_class}">{escape(s)}</span>' for s in skills
     )
     return f'<div class="skill-badge-container">{badges}</div>'
 
@@ -633,11 +601,21 @@ st.markdown(_CSS, unsafe_allow_html=True)
 
 st.markdown("""
 <div class="hero-header">
-    <h1>🧠 AI Adaptive Onboarding Engine</h1>
-    <p>AI‑powered resume & job description analysis with personalized skill‑gap roadmaps</p>
-    <span class="hero-badge">✦ POWERED BY CUSTOM TRANSFORMER</span>
+    <h1>CareerLaunch AI Model Demo</h1>
+    <p>Compare a resume and job description with the experimental PyTorch checkpoint.</p>
 </div>
 """, unsafe_allow_html=True)
+
+if not engine.has_model:
+    st.warning("Checkpoint or tokenizer missing. Analysis will use keyword matching.")
+st.caption(
+    "The checkpoint was trained on synthetic examples. Its similarity score "
+    "measures how close the document embeddings are on a 0–1 scale."
+)
+demo_clicked = st.button("Run synthetic example")
+with st.expander("Synthetic example inputs"):
+    st.text(f"Resume\n{SAMPLE_RESUME}")
+    st.text(f"Job description\n{SAMPLE_JOB}")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -647,7 +625,7 @@ st.markdown("""
 st.markdown("""
 <div class="section-header">
     <span class="section-icon">📂</span>
-    <h2>Upload Documents</h2>
+    <h2>Try your own documents</h2>
 </div>
 """, unsafe_allow_html=True)
 
@@ -681,11 +659,11 @@ btn_left, btn_right = st.columns(2, gap="medium")
 
 with btn_left:
     analyze_clicked = st.button(
-        "🚀  Analyze with AI", use_container_width=True, type="primary"
+        "Analyze documents", use_container_width=True, type="primary"
     )
 with btn_right:
     st.button(
-        "🗑️  Clear Results",
+        "Clear results",
         use_container_width=True,
         on_click=_clear_results,
     )
@@ -695,43 +673,35 @@ with btn_right:
 # ANALYSIS (runs exactly once per click)
 # ═════════════════════════════════════════════════════════════════════════════
 
-if analyze_clicked:
+if analyze_clicked or demo_clicked:
     _clear_results()
 
-    resume_text = resume_text_input.strip() or None
-    resume_path = _save_upload_to_tempfile(resume_file) if not resume_text else None
-
-    if not resume_text and not resume_path:
-        st.warning("⚠️ Please provide a resume — upload a PDF or paste text.")
+    resume_text = SAMPLE_RESUME if demo_clicked else resume_text_input.strip()
+    jd_text = SAMPLE_JOB if demo_clicked else jd_text_input.strip()
+    if not resume_text and not resume_file:
+        st.warning("Upload a resume PDF or paste the resume text.")
+        st.stop()
+    if not jd_text and not jd_file:
+        st.warning("Upload a job description PDF or paste the job description text.")
         st.stop()
 
-    jd_text = jd_text_input.strip() or None
-    jd_path = _save_upload_to_tempfile(jd_file) if not jd_text else None
-
-    if not jd_text and not jd_path:
-        st.warning("⚠️ Please provide a job description — upload a PDF or paste text.")
-        st.stop()
-
-    with st.spinner("🔍 Running AI analysis…"):
+    with st.spinner("Analyzing documents…"):
         try:
-            result = engine.analyze(
-                resume_text=resume_text,
-                resume_pdf=resume_path,
-                jd_text=jd_text,
-                jd_pdf=jd_path,
-            )
+            with tempfile.TemporaryDirectory() as upload_dir:
+                folder = Path(upload_dir)
+                resume_path = None if resume_text else _save_upload(resume_file, folder / "resume.pdf")
+                jd_path = None if jd_text else _save_upload(jd_file, folder / "job.pdf")
+                result = engine.analyze(
+                    resume_text=resume_text,
+                    resume_pdf=resume_path,
+                    jd_text=jd_text,
+                    jd_pdf=jd_path,
+                )
             st.session_state.analysis_results = result
-            st.session_state.error_message = None
-        except Exception as exc:
-            st.session_state.analysis_results = None
-            st.session_state.error_message = str(exc)
-
-    for path in (resume_path, jd_path):
-        if path and os.path.exists(path):
-            try:
-                os.unlink(path)
-            except OSError:
-                pass
+        except Exception:
+            st.session_state.error_message = (
+                "Analysis could not finish. Try a readable PDF or paste the text."
+            )
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -739,7 +709,7 @@ if analyze_clicked:
 # ═════════════════════════════════════════════════════════════════════════════
 
 if st.session_state.error_message:
-    st.error(f"❌ Analysis failed: {st.session_state.error_message}")
+    st.error(st.session_state.error_message)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -750,14 +720,16 @@ result = st.session_state.analysis_results
 
 if result:
     # ── Method badge ──────────────────────────────────────────────────────
-    method = result.get("method", "unknown")
-    badge_cls = "method-model" if method == "model" else "method-rule"
-    badge_icon = "🤖" if method == "model" else "📏"
+    used_model = result["method"] == "model"
+    badge_cls = "method-model" if used_model else "method-rule"
+    method_label = "Checkpoint + keywords" if used_model else "Keywords only"
     st.markdown(f"""
     <div style="text-align:center; margin: 10px 0 4px;">
-        <span class="method-badge {badge_cls}">{badge_icon} {method.upper()} INFERENCE</span>
+        <span class="method-badge {badge_cls}">{method_label}</span>
     </div>
     """, unsafe_allow_html=True)
+    if used_model:
+        st.caption("The skill lists combine checkpoint predictions with keyword matches.")
 
     # ── Tabs ──────────────────────────────────────────────────────────────
     tab_dashboard, tab_skills, tab_roadmap = st.tabs([
@@ -768,15 +740,14 @@ if result:
     # TAB 1 — DASHBOARD
     # ══════════════════════════════════════════════════════════════════════
     with tab_dashboard:
-        match_score = float(result.get("match_score", 0))
-        pct = round(match_score * 100)
-        color = _score_color(match_score)
-
         resume_skills = result.get("resume_skills", [])
         jd_skills = result.get("jd_skills", [])
         missing_skills = result.get("missing_skills", [])
         gap = result.get("gap_analysis", {})
         matched = gap.get("matched", [])
+        skill_coverage = len(matched) / len(jd_skills) if jd_skills else 0
+        score = f"{result['match_score']:.3f}" if used_model else f"{skill_coverage:.0%}"
+        score_label = "Embedding similarity" if used_model else "Skill coverage"
 
         # ── Row 1: Score ring + stat cards ────────────────────────────────
         score_col, stats_col = st.columns([1, 2], gap="large")
@@ -784,10 +755,10 @@ if result:
         with score_col:
             st.markdown(f"""
             <div class="score-ring-container">
-                <div class="score-ring" style="background: var(--bg-card); color: {color};">
-                    {pct}%
+                <div class="score-ring" style="background: var(--bg-card); color: var(--accent-blue);">
+                    {score}
                 </div>
-                <div class="score-label">Match Score</div>
+                <div class="score-label">{score_label}</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -795,7 +766,7 @@ if result:
             s1, s2, s3, s4 = st.columns(4, gap="small")
             stats = [
                 (len(resume_skills), "Resume Skills", "var(--accent-blue)"),
-                (len(jd_skills),     "JD Required",   "var(--accent-purple)"),
+                (len(jd_skills),     "Job Skills",    "var(--accent-purple)"),
                 (len(matched),       "Matched",       "var(--accent-green)"),
                 (len(missing_skills),"Gaps Found",    "var(--accent-red)"),
             ]
@@ -809,7 +780,10 @@ if result:
 
         # ── Row 2: Progress bar ───────────────────────────────────────────
         st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
-        st.progress(max(0.0, min(match_score, 1.0)))
+        if jd_skills:
+            st.progress(skill_coverage, text=f"Detected job skills in resume · {len(matched)}/{len(jd_skills)}")
+        else:
+            st.caption("No skills were detected in the job description.")
 
         # ── Row 3: Quick glance skills ────────────────────────────────────
         st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
@@ -870,7 +844,7 @@ if result:
             st.markdown("""
             <div class="section-header">
                 <span class="section-icon">📑</span>
-                <h2>JD Required Skills</h2>
+                <h2>Detected job skills</h2>
             </div>
             """, unsafe_allow_html=True)
             st.markdown(
