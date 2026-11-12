@@ -1,0 +1,218 @@
+[
+  {
+    "id": "service-modernization",
+    "role": "Backend Developer",
+    "description": "Required qualifications\nPython, PostgreSQL and REST APIs\nPreferred qualifications\nDocker and AWS",
+    "required": ["python", "postgresql", "rest api"],
+    "preferred": ["docker", "aws"],
+    "resumes": [
+      {
+        "id": "inventory-maintainer",
+        "pages": [{"main": ["Inventory Maintainer", "Maintained REST APIs in Python for stock reconciliation.", "Migrated query logs to Postgres and packaged workers in Docker."]}],
+        "positive": ["rest api", "python", "postgresql", "docker"],
+        "negated": []
+      },
+      {
+        "id": "application-support",
+        "pages": [{"main": ["Application Support", "No hands-on PostgreSQL experience.", "Used Python to automate nightly support reports."], "sidebar": ["Skills", "Docker", "AWS"]}],
+        "positive": ["python", "docker", "aws"],
+        "negated": ["postgresql"]
+      },
+      {
+        "id": "legacy-systems",
+        "pages": [{"main": ["Legacy Systems", "Maintained Java batch services.", "No prior Python or PostgreSQL experience."]}, {"main": ["Side Project", "Built a REST API for a neighborhood repair club."]}],
+        "positive": ["java", "rest api"],
+        "negated": ["python", "postgresql"]
+      }
+    ]
+  },
+  {
+    "id": "operations-reporting",
+    "role": "Data Analyst",
+    "description": "You will use SQL and Excel to build recurring operations reports.\nNice to have: Tableau or Power BI.",
+    "required": ["sql", "excel"],
+    "preferred": ["tableau", "power bi"],
+    "resumes": [
+      {
+        "id": "warehouse-analyst",
+        "pages": [{"main": ["Warehouse Analyst", "Reconciled shipment records with SQL and Excel.", "Have not used Tableau, but I built reports in Power BI."]}],
+        "positive": ["sql", "excel", "power bi"],
+        "negated": ["tableau"]
+      },
+      {
+        "id": "store-reporting",
+        "pages": [{"main": ["Store Reporting", "Published sales reports for three locations.", "I have never written SQL."], "sidebar": ["Toolbox", "Excel", "Tableau"]}],
+        "positive": ["excel", "tableau"],
+        "negated": ["sql"]
+      },
+      {
+        "id": "survey-specialist",
+        "pages": [{"main": ["Survey Specialist", "Used R to summarize responses.", "I have not worked with SQL or Excel."]}, {"main": ["Community Project", "Created a PowerBI dashboard to share survey results."]}],
+        "positive": ["r", "power bi"],
+        "negated": ["sql", "excel"]
+      }
+    ]
+  },
+  {
+    "id": "storefront-accessibility",
+    "role": "Frontend Developer",
+    "description": "Required: React, JavaScript and CSS; preferred: TypeScript and Node.js.",
+    "required": ["react", "javascript", "css"],
+    "preferred": ["typescript", "node.js"],
+    "resumes": [
+      {
+        "id": "checkout-interface",
+        "pages": [{"main": ["Checkout Interface", "Built a checkout flow with React, JS and CSS.", "I have no professional experience with Node.js."]}],
+        "positive": ["react", "javascript", "css"],
+        "negated": ["node.js"]
+      },
+      {
+        "id": "design-system",
+        "pages": [{"main": ["Design System", "Built accessible components in TypeScript.", "Used CSS to support high-contrast themes."], "sidebar": ["Tools", "ReactJS", "GitHub"]}],
+        "positive": ["typescript", "css", "react", "github"],
+        "negated": []
+      },
+      {
+        "id": "desktop-to-web",
+        "pages": [{"main": ["Desktop to Web", "Maintained a Java service. No paid work with React."]}, {"main": ["Personal Projects", "Built a React hobby dashboard and an HTML contact form."]}],
+        "positive": ["java", "react", "html"],
+        "negated": ["react"]
+      }
+    ]
+  },
+  {
+    "id": "document-modeling",
+    "role": "AI Engineer",
+    "description": "Python and PyTorch are required. Exposure to NLP or transformers is helpful.",
+    "required": ["python", "pytorch"],
+    "preferred": ["nlp", "transformers"],
+    "resumes": [
+      {
+        "id": "invoice-classifier",
+        "pages": [{"main": ["Invoice Classifier", "Trained document classifiers in Python with PyTorch.", "Implemented a natural language processing pipeline for invoices."]}],
+        "positive": ["python", "pytorch", "nlp"],
+        "negated": []
+      },
+      {
+        "id": "tooling-developer",
+        "pages": [{"main": ["Tooling Developer", "Wrote Python utilities for dataset review.", "Have not worked with PyTorch or transformers."], "sidebar": ["Skills", "SQL", "Docker"]}],
+        "positive": ["python", "sql", "docker"],
+        "negated": ["pytorch", "transformers"]
+      },
+      {
+        "id": "text-reviewer",
+        "pages": [{"main": ["Text Reviewer", "Tagged support notes for an NLP research project."]}, {"main": ["Other Work", "Automated reviews in Excel. No Python experience yet."]}],
+        "positive": ["nlp", "excel"],
+        "negated": ["python"]
+      }
+    ]
+  },
+  {
+    "id": "model-platform",
+    "role": "ML Engineer",
+    "description": "Must have\n- Docker\n- Kubernetes\n- MLOps\nPreferred qualifications\n- Git\n- Linux",
+    "required": ["docker", "kubernetes", "mlops"],
+    "preferred": ["git", "linux"],
+    "resumes": [
+      {
+        "id": "release-platform",
+        "pages": [{"main": ["Release Platform", "Ran MLOps releases on K8s using Docker images.", "Tracked release changes in Git and debugged jobs on Linux."]}],
+        "positive": ["mlops", "kubernetes", "docker", "git", "linux"],
+        "negated": []
+      },
+      {
+        "id": "container-support",
+        "pages": [{"main": ["Container Support", "Supported Docker images for development.", "Familiar with Linux but have never used Kubernetes."], "sidebar": ["Toolbox", "Git", "Python"]}],
+        "positive": ["docker", "linux", "git", "python"],
+        "negated": ["kubernetes"]
+      },
+      {
+        "id": "deployment-automation",
+        "pages": [{"main": ["Deployment Automation", "Managed Kubernetes rollouts for a monitoring service.", "No MLOps projects to date."]}, {"main": ["Previous Work", "Authored Git release templates and used Bash for nightly tasks."]}],
+        "positive": ["kubernetes", "git", "bash"],
+        "negated": ["mlops"]
+      }
+    ]
+  },
+  {
+    "id": "event-processing",
+    "role": "Backend Developer",
+    "description": "Required qualifications: Java, Kafka, and Redis. PostgreSQL is a plus.",
+    "required": ["java", "kafka", "redis"],
+    "preferred": ["postgresql"],
+    "resumes": [
+      {
+        "id": "payment-events",
+        "pages": [{"main": ["Payment Events", "Built a Java payment service with Apache Kafka and Redis.", "Added PostgreSQL reports to track settlement failures."]}],
+        "positive": ["java", "kafka", "redis", "postgresql"],
+        "negated": []
+      },
+      {
+        "id": "message-processor",
+        "pages": [{"main": ["Message Processor", "Maintained Java libraries for a messaging gateway.", "No experience with Kafka or Redis."], "sidebar": ["Skills", "Postgres", "C#"]}],
+        "positive": ["java", "postgresql", "c#"],
+        "negated": ["kafka", "redis"]
+      },
+      {
+        "id": "stream-routing",
+        "pages": [{"main": ["Stream Routing", "Routed Apache Kafka events with Go."]}, {"main": ["Previous Work", "Wrote C++17 monitoring plugins. No Java experience."]}],
+        "positive": ["kafka", "go", "c++"],
+        "negated": ["java"]
+      }
+    ]
+  },
+  {
+    "id": "demand-forecasting",
+    "role": "Data Scientist",
+    "description": "Required: machine learning, Python and statistics. SQL and scikit-learn are preferred. Excel is not required for this role.",
+    "required": ["machine learning", "python", "statistics"],
+    "preferred": ["sql", "scikit-learn"],
+    "resumes": [
+      {
+        "id": "forecast-experiment",
+        "pages": [{"main": ["Forecast Experiment", "Used Python and statistics to evaluate demand forecasts.", "Trained a machine", "learning model with sklearn on store data."]}],
+        "positive": ["python", "statistics", "machine learning", "scikit-learn"],
+        "negated": []
+      },
+      {
+        "id": "sales-metrics",
+        "pages": [{"main": ["Sales Metrics", "Used Python to consolidate sales reports.", "I have no experience in machine learning."], "sidebar": ["Skills", "SQL", "Excel"]}],
+        "positive": ["python", "sql", "excel"],
+        "negated": ["machine learning"]
+      },
+      {
+        "id": "market-research",
+        "pages": [{"main": ["Market Research", "Applied statistics to interpret survey responses."]}, {"main": ["Volunteer Work", "Worked with Tableau. No prior Python or ML experience."]}],
+        "positive": ["statistics", "tableau"],
+        "negated": ["python", "machine learning"]
+      }
+    ]
+  },
+  {
+    "id": "publishing-interface",
+    "role": "Frontend Developer",
+    "description": "Role responsibilities\n- Create accessible interfaces with HTML and CSS.\n- Build and test JavaScript features.\nBonus points for Vue or Angular.",
+    "required": ["html", "css", "javascript"],
+    "preferred": ["vue", "angular"],
+    "resumes": [
+      {
+        "id": "newsletter-builder",
+        "pages": [{"main": ["Newsletter Builder", "Built HTML and CSS templates with JavaScript previews.", "Used VueJS for the editor. Have not worked with Angular."]}],
+        "positive": ["html", "css", "javascript", "vue"],
+        "negated": ["angular"]
+      },
+      {
+        "id": "document-site",
+        "pages": [{"main": ["Document Site", "Maintained HTML pages and handled accessibility reviews.", "I do not know JavaScript."], "sidebar": ["Skills", "CSS3", "GitHub"]}],
+        "positive": ["html", "css", "github"],
+        "negated": ["javascript"]
+      },
+      {
+        "id": "content-operations",
+        "pages": [{"main": ["Content Operations", "Built a release checklist in Excel."]}, {"main": ["Earlier Work", "No HTML, CSS or JavaScript experience."]}],
+        "positive": ["excel"],
+        "negated": ["html", "css", "javascript"]
+      }
+    ]
+  }
+]

@@ -105,6 +105,63 @@ _SKILL_PATTERN = re.compile(
     + r")(?![\w+#])"
 )
 
+_CLAUSE_BREAK = r"[;!?]|\.(?=\s|$)|\b(?:but|however|whereas|although|though)\b"
+_CLAUSE_BOUNDARY = re.compile(_CLAUSE_BREAK, re.IGNORECASE)
+_RESUME_CLAUSE_BOUNDARY = re.compile(r"\)|" + _CLAUSE_BREAK, re.IGNORECASE)
+_NEGATION_PREFIX = re.compile(
+    r"\b(?:"
+    r"(?:no|without|lack(?:s|ing)?(?:\s+of)?)\s+(?:(?:any|prior|previous|professional|hands[- ]on|practical)\s+)*"
+    r"(?:experience|exposure|knowledge|proficiency)(?:\s+(?:with|in|using|of))?"
+    r"|(?:never|not(?:\s+yet)?|haven['’]t|hasn['’]t|hadn['’]t|don['’]t|doesn['’]t|didn['’]t)\s+"
+    r"(?:used?|worked?\s+with|built\s+with|learned|learnt|know|touched|familiar\s+with)"
+    r"|unfamiliar\s+with"
+    r")\b",
+    re.IGNORECASE,
+)
+_NEGATION_SUFFIX = re.compile(
+    r"^\s*(?:[:(–—-]\s*|\bis\s+)?"
+    r"(?:"
+    r"no\s+(?:(?:prior|previous|professional|hands[- ]on|practical)\s+)*(?:experience|exposure|knowledge|proficiency)"
+    r"|(?:experience|exposure)\s*:\s*none"
+    r"|none|unfamiliar|never\s+used|not\s+(?:yet\s+)?(?:used|learned)"
+    r")\b",
+    re.IGNORECASE,
+)
+_LIST_GLUE = re.compile(r"(?:[\s,:/&()+|–—-]|\b(?:and|or|nor|either)\b)*", re.IGNORECASE)
+
+_JD_HEADING = re.compile(
+    r"^[^\S\n]*(?:[•*#-]+[^\S\n]*)?"
+    r"(?:"
+    r"(?P<preferred>preferred(?:\s+(?:skills|qualifications|requirements|experience))?"
+    r"|nice[- ]to[- ]haves?(?:\s+(?:skills|qualifications))?|bonus(?:\s+(?:points|skills|qualifications))?"
+    r"|desirable(?:\s+(?:skills|qualifications))?|optional(?:\s+(?:skills|qualifications))?|additional\s+qualifications)"
+    r"|(?P<required>required(?:\s+(?:skills|qualifications|experience))?|requirements|qualifications"
+    r"|minimum(?:\s+(?:qualifications|requirements))?|basic\s+qualifications"
+    r"|must[- ]haves?|essential(?:\s+skills)?|what\s+you(?:['’]ll|\s+will)\s+need)"
+    r"|(?P<other>responsibilities|about\s+(?:us|the\s+role)|benefits|what\s+you['’]ll\s+do)"
+    r")[^\S\n]*(?:[:–—][^\S\n]*|$)",
+    re.IGNORECASE | re.MULTILINE,
+)
+_JD_MARKER = re.compile(
+    r"\b(?:"
+    r"(?P<preferred>not\s+required|preferred|prefer(?:s)?|nice[- ]to[- ]have|desirable|optional"
+    r"|bonus(?:\s+points)?|a\s+plus|an\s+advantage|ideally|helpful)"
+    r"|(?P<required>required|must[- ]have|must\s+(?:know|use|demonstrate)|mandatory|essential|necessary)"
+    r")\b",
+    re.IGNORECASE,
+)
+_JD_PREFIX_GLUE = re.compile(
+    r"(?:[\s,:/&()+|–—-]|\b(?:and|or|if|in|with|of|for|you|know|have|need|skills?|experience"
+    r"|knowledge|familiarity|proficiency|hands[- ]on|working|prior|using|qualifications?"
+    r"|includes?|including|such|as)\b)*",
+    re.IGNORECASE,
+)
+_JD_SUFFIX_GLUE = re.compile(
+    r"(?:[\s,:/&()+|–—-]|\b(?:and|or|experience|skills?|is|are|would|will|be|considered"
+    r"|strongly|highly|a|an)\b)*",
+    re.IGNORECASE,
+)
+
 skill_graph = {
     "deep learning": ["machine learning"],
     "machine learning": ["python", "statistics"],
@@ -177,19 +234,123 @@ def detect_skills(text):
     return list(detect_skill_evidence(text))
 
 
-def detect_skill_evidence(text):
+def detect_skill_evidence(text, *, include_negated=False):
     """Return the first original line supporting each recognized skill."""
-    text = "\n".join(text.splitlines())
+    if not include_negated:
+        evidence, _ = classify_resume_skill_evidence(text)
+        return evidence
+
     evidence = {}
+    for skill, line, _, _, _ in _skill_mentions("\n".join(text.splitlines())):
+        evidence.setdefault(skill, line)
+    return _ordered_evidence(evidence)
+
+
+def classify_resume_skill_evidence(text):
+    """Return positive and explicitly negated skill evidence from resume text."""
+    positive = {}
+    negated = {}
+    text = "\n".join(text.splitlines())
+    for skill, line, before, after, position in _skill_mentions(text):
+        if _is_negated(before, after):
+            negated.setdefault(skill, line)
+            continue
+
+        previous_end = position - len(before) - 1
+        if previous_end >= 0 and _LIST_GLUE.fullmatch(before):
+            previous_start = text.rfind("\n", 0, previous_end) + 1
+            previous = text[previous_start:previous_end].strip()
+            continuation = (
+                previous.lower().endswith((" with", " in", " using", " of", " or", " and", ","))
+                or re.match(r"^\s*(?:and|or|nor)\b", before, re.IGNORECASE)
+            )
+            if continuation and _is_negated(f"{previous} {before}", after):
+                negated.setdefault(skill, f"{previous}\n{line}")
+                continue
+        positive.setdefault(skill, line)
+    return _ordered_evidence(positive), _ordered_evidence(negated)
+
+
+def classify_requirement_evidence(text):
+    """Return required and preferred evidence, giving required mentions precedence."""
+    required = {}
+    preferred = {}
+    text = "\n".join(text.splitlines())
+    headings = iter(_JD_HEADING.finditer(text))
+    next_heading = next(headings, None)
+    section = None
+    for skill, line, before, after, position in _skill_mentions(text):
+        while next_heading and next_heading.end() <= position:
+            section = next_heading
+            next_heading = next(headings, None)
+        explicit_heading = section and section.end() > position - len(before)
+        default = "preferred" if section and section.lastgroup == "preferred" else "required"
+        priority = _inline_priority(before, after, default if explicit_heading else None)
+        evidence = preferred if (priority or default) == "preferred" else required
+        evidence.setdefault(skill, line)
+
+    return _ordered_evidence(required), _ordered_evidence({
+        skill: line for skill, line in preferred.items() if skill not in required
+    })
+
+
+def _skill_mentions(text):
     for match in _SKILL_PATTERN.finditer(text):
-        skill = _SKILL_GROUPS[match.lastgroup]
-        if skill not in evidence:
-            line_start = text.rfind("\n", 0, match.start()) + 1
-            line_end = text.find("\n", match.end())
-            if line_end == -1:
-                line_end = len(text)
-            evidence[skill] = text[line_start:line_end].strip()
+        start, end = match.span()
+        line_start = text.rfind("\n", 0, start) + 1
+        line_end = text.find("\n", end)
+        if line_end == -1:
+            line_end = len(text)
+        yield (
+            _SKILL_GROUPS[match.lastgroup],
+            text[line_start:line_end].strip(),
+            text[line_start:start],
+            text[end:line_end],
+            start,
+        )
+
+
+def _ordered_evidence(evidence):
     return {skill: evidence[skill] for skill in skills if skill in evidence}
+
+
+def _is_negated(before, after):
+    before = _RESUME_CLAUSE_BOUNDARY.split(before)[-1]
+    after = _CLAUSE_BOUNDARY.split(after, maxsplit=1)[0]
+    for marker in _NEGATION_PREFIX.finditer(before):
+        if _LIST_GLUE.fullmatch(_SKILL_PATTERN.sub("", before[marker.end():])):
+            return True
+    if _NEGATION_SUFFIX.match(after):
+        return True
+    # A bare "no" or "zero" counts only when it directly qualifies the skill
+    # or a list of skills, avoiding phrases such as "no SQL migration issues".
+    for marker in re.finditer(r"\b(?:no|zero)\s+", before, re.IGNORECASE):
+        if _LIST_GLUE.fullmatch(_SKILL_PATTERN.sub("", before[marker.end():])):
+            tail = _SKILL_PATTERN.sub("", after)
+            return bool(_LIST_GLUE.fullmatch(tail) or re.match(
+                r"^(?:[\s,/:]|\b(?:and|or|nor)\b)*(?:experience|skills?|knowledge|proficiency|exposure|yet)\b",
+                tail,
+                re.IGNORECASE,
+            ))
+    return False
+
+
+def _inline_priority(before, after, heading_priority):
+    before = _CLAUSE_BOUNDARY.split(before)[-1]
+    after = _CLAUSE_BOUNDARY.split(after, maxsplit=1)[0]
+    prefix_priority = heading_priority
+    for marker in _JD_MARKER.finditer(before):
+        if _JD_PREFIX_GLUE.fullmatch(_SKILL_PATTERN.sub("", before[marker.end():])):
+            prefix_priority = marker.lastgroup
+
+    for marker in _JD_MARKER.finditer(after):
+        between = after[:marker.start()]
+        if not _JD_SUFFIX_GLUE.fullmatch(_SKILL_PATTERN.sub("", between)):
+            break
+        if prefix_priority and "," in between:
+            break
+        return marker.lastgroup
+    return prefix_priority
 
 
 def compute_skill_gap(resume_skills, jd_skills):

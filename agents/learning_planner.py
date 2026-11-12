@@ -8,8 +8,11 @@ class LearningPlannerAgent(BaseAgent):
     def run(self, state: dict):
         self.log(state, "Generating learning roadmap...")
 
-        missing = state["missing_skills"]
+        missing = state["missing_skills"] + state["missing_preferred_skills"]
         roadmap = self._build_roadmap(missing)
+        preferred = set(state["missing_preferred_skills"])
+        for step in roadmap:
+            step["priority"] = "preferred" if step["skill"] in preferred else "required"
 
         state["roadmap"] = roadmap
         self.log(state, f"Roadmap created with {len(roadmap)} steps")

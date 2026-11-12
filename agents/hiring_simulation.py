@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from groq import Groq, GroqError
 
 from agents.base_agent import BaseAgent
+from engine import get_role_skills
 
 
 STAGES = ("ats", "recruiter", "hiring_manager", "technical_panel")
@@ -60,15 +61,17 @@ class HiringSimulationAgent(BaseAgent):
 
     @staticmethod
     def _build_review(state):
-        requirements = state["jd_skills"]
+        required = state["required_skills"]
+        requirements = required or state["preferred_skills"]
         if not requirements:
             return {
                 stage: {"concern": concern, "action": action, "evidence": []}
                 for stage, (concern, action) in NO_REQUIREMENTS.items()
             }
 
-        matched = state["matched_skills"]
-        gaps = state["missing_skills"]
+        matched = state["matched_skills"] if required else state["matched_preferred_skills"]
+        gaps = state["missing_skills"] if required else state["missing_preferred_skills"]
+        priority = "required" if required else "preferred"
         ats = (gaps or matched)[0]
         recruiter = (matched or gaps)[0]
         manager = (gaps or matched)[-1]
@@ -82,23 +85,23 @@ class HiringSimulationAgent(BaseAgent):
         feedback = {
             "ats": (
                 ats,
-                f"The extracted resume shows no evidence for {ats_label}, one of the recognized requirements."
+                f"The selected resume skills have no match for {ats_label}, a {priority} skill."
                 if ats in gaps else
-                f"All {len(requirements)} recognized requirements appear in the extracted resume.",
+                f"The selected resume skills match all {len(requirements)} {priority} skills.",
                 f"Check that your resume uses the posting's wording for {ats_label} wherever it accurately describes your experience.",
             ),
             "recruiter": (
                 recruiter,
                 f"A recruiter may ask how your work with {recruiter_label} relates to this role."
                 if recruiter in matched else
-                f"The resume provides no extracted evidence for {recruiter_label}.",
+                f"The selected resume skills have no match for {recruiter_label}.",
                 f"Prepare a short example of how you used {recruiter_label}, if you have one, including the result.",
             ),
             "hiring_manager": (
                 manager,
                 f"A hiring manager may ask which outcome your work with {manager_label} supported."
                 if manager in matched else
-                f"The extracted resume has no project evidence for the {manager_label} requirement.",
+                f"The selected resume skills have no match for {manager_label}, a {priority} skill.",
                 f"Prepare one project example for {manager_label} that explains what you owned and what changed."
                 if manager in matched else
                 f"Build a small sample project with {manager_label} and document what you learned.",
@@ -107,26 +110,35 @@ class HiringSimulationAgent(BaseAgent):
                 technical,
                 f"A technical panel may ask you to explain a trade-off you made using {technical_label}."
                 if technical in matched else
-                f"The resume provides no extracted evidence of hands-on work with {technical_label}.",
+                f"The selected resume skills have no match for {technical_label}.",
                 f"Practice explaining one decision involving {technical_label}, an alternative, and how you would test the result.",
             ),
         }
 
         review = {}
+        role_checklist = get_role_skills(state["target_role"]) if state["jd_source"] == "role_based" else []
         for stage, (skill, concern, action) in feedback.items():
             evidence = []
             resume_line = state["skill_evidence"].get(skill)
             if resume_line:
                 evidence.append({"source": "resume", "skill": skill, "line": resume_line})
+            elif skill in matched:
+                evidence.append({"source": "review", "skill": skill, "line": "Confirmed as a resume skill during review."})
+            elif skill in state["negated_skill_evidence"]:
+                evidence.append({
+                    "source": "resume_denial", "skill": skill, "line": state["negated_skill_evidence"][skill],
+                })
             requirement_line = state["requirement_evidence"].get(skill)
             if requirement_line:
                 evidence.append({"source": "requirements", "skill": skill, "line": requirement_line})
-            elif state["jd_source"] == "role_based":
+            elif skill in role_checklist:
                 evidence.append({
                     "source": "role",
                     "skill": skill,
                     "line": f"{skill} is on the built-in {state['target_role']} checklist.",
                 })
+            else:
+                evidence.append({"source": "review", "skill": skill, "line": "Added as a target skill during review."})
             review[stage] = {"concern": concern, "action": action, "evidence": evidence}
         return review
 
@@ -137,7 +149,7 @@ class HiringSimulationAgent(BaseAgent):
             "stages": {
                 stage: {
                     "skill": review[stage]["evidence"][0]["skill"],
-                    "present": review[stage]["evidence"][0]["source"] == "resume",
+                    "present": review[stage]["evidence"][0]["skill"] in state["resume_skills"],
                 }
                 for stage in STAGES
                 if review[stage]["evidence"]

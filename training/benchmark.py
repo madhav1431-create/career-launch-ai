@@ -2,18 +2,10 @@
 
 import argparse
 import json
-from contextlib import redirect_stdout
-from io import StringIO
 from itertools import combinations
 from pathlib import Path
 
-import torch
-
-from agents.match_agent import MatchAgent
-from data.dataset import extract_skills
-from engine import detect_skills
-from training.inference import OnboardingEngine
-from utils.text_utils import normalize_for_model
+from engine import detect_skill_evidence
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -29,11 +21,9 @@ def coverage(resume_skills, job_skills):
     return len(resume_skills & job_skills) / len(job_skills) if job_skills else 0.0
 
 
-def flask_coverage(resume_skills, job_skills):
-    state = {"resume_skills": resume_skills, "jd_skills": job_skills, "agent_logs": []}
-    with redirect_stdout(StringIO()):
-        MatchAgent().run(state)
-    return state["match_score"] / 100
+def keyword_coverage(resume_skills, job_skills):
+    """Coverage as reported by the original keyword-only Flask matcher."""
+    return round(coverage(resume_skills, job_skills) * 100) / 100
 
 
 def extraction_metrics(predictions):
@@ -64,18 +54,21 @@ def ranking_metrics(jobs, score_name):
 
 
 def evaluate(model, cases, details):
+    from data.dataset import extract_skills
+    from utils.text_utils import normalize_for_model
+
     extraction = {"Flask keywords": [], "Model demo keywords": [], "Checkpoint + keywords": []}
     jobs = []
     for job in cases:
         description = job["description"]
         expected_job = canonical_skills(job["skills"])
-        flask_job = canonical_skills(detect_skills(description))
+        flask_job = canonical_skills(detect_skill_evidence(description, include_negated=True))
         demo_job = canonical_skills(extract_skills(normalize_for_model(description)))
         candidates = []
         for resume in job["resumes"]:
             text = resume["text"]
             expected_resume = canonical_skills(resume["skills"])
-            flask_resume = canonical_skills(detect_skills(text))
+            flask_resume = canonical_skills(detect_skill_evidence(text, include_negated=True))
             demo_resume = canonical_skills(extract_skills(normalize_for_model(text)))
             result = model.analyze(resume_text=text, jd_text=description)
             if result["method"] != "model":
@@ -93,7 +86,7 @@ def evaluate(model, cases, details):
 
             scores = {
                 "expected": coverage(expected_resume, expected_job),
-                "flask": flask_coverage(flask_resume, flask_job),
+                "flask": keyword_coverage(flask_resume, flask_job),
                 "demo": coverage(demo_resume, demo_job),
                 "checkpoint": result["match_score"],
             }
@@ -121,6 +114,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--details", action="store_true", help="Show each resume's errors and scores.")
     args = parser.parse_args()
+
+    import torch
+
+    from training.inference import OnboardingEngine
+
     cases = json.loads(CASES_PATH.read_text(encoding="utf-8"))
     torch.set_num_threads(1)
     model = OnboardingEngine(checkpoint=ROOT / "checkpoints" / "best_model.pt", device="cpu")

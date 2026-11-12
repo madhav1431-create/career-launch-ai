@@ -67,6 +67,7 @@
   .field select, .field textarea { border: 1px solid var(--border); border-radius: 8px; padding: .6rem .55rem; }
   .field textarea { resize: vertical; min-height: 6rem; }
   input[type="file"]::file-selector-button { border: 1px solid var(--border); border-radius: 8px; background: var(--background); color: var(--ink); padding: .45rem .55rem; font: inherit; margin-right: .55rem; cursor: pointer; }
+  .demo-repo { margin-top: 1rem; }
 
   .button { display: inline-flex; align-items: center; justify-content: center; padding: .66rem .92rem; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--ink); font-weight: 700; font-size: .88rem; line-height: 1.3; }
   .button:hover:not(:disabled) { border-color: var(--accent); }
@@ -99,11 +100,22 @@
   .coverage .text-button:focus-visible { outline-color: #fff; }
   .text-button { border: 0; background: none; padding: 0; color: var(--accent); text-decoration: underline; text-underline-offset: .18em; }
   .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+  .gap-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
+  .priority-card { display: flex; flex-direction: column; gap: .6rem; }
+  .priority-card > * + * { margin-top: 0; }
+  .priority-card .gap-next { margin-top: auto; padding-top: .5rem; }
+  .priority-kind { font-size: .78rem; font-weight: 700; color: var(--muted); }
+  .compact-heading { margin-bottom: .65rem; }
   .section-gap { margin-top: 1rem; }
   .card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: clamp(1rem, 2.5vw, 1.35rem); min-width: 0; overflow-wrap: anywhere; }
   .card > * + *, .stack > * + * { margin-top: .7rem; }
   .card-stack > * + * { margin-top: .9rem; }
   .skill-item { border-top: 1px solid var(--border); padding-top: .8rem; }
+  .review-tools { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: .6rem; }
+  .review-row { display: grid; gap: .3rem; }
+  .review-row .field { grid-template-columns: minmax(0, 1fr) minmax(0, 8rem); align-items: center; }
+  .review-row input[type="checkbox"] { width: auto; margin-inline-end: .45rem; accent-color: var(--accent); }
+  .review-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1.25rem; }
   .evidence { border-inline-start: 3px solid var(--border); padding-inline-start: .7rem; margin-top: .5rem; }
   .evidence-source { font-size: .78rem; color: var(--muted); font-weight: 700; }
   .evidence blockquote { margin-top: .15rem; font-size: .88rem; }
@@ -116,6 +128,7 @@
   .roadmap li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: baseline; gap: .75rem; }
   .step-number { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
   .roadmap small { display: block; color: var(--muted); }
+  .roadmap li:focus { outline: 3px solid var(--accent); outline-offset: 3px; }
   .print-only { display: none; }
 
   @media (max-width: 740px) {
@@ -126,6 +139,7 @@
     .topbar { margin-bottom: 1rem; }
     .topbar-actions { justify-content: flex-end; }
     .grid { grid-template-columns: 1fr; }
+    .gap-grid { grid-template-columns: 1fr; }
   }
 
   @media print {
@@ -180,7 +194,7 @@
         <label for="jdFile">Job description PDF</label>
         <input id="jdFile" name="jd_file" type="file" accept=".pdf,application/pdf">
       </div>
-      <button id="analyze" class="button primary" type="submit">Analyze resume</button>
+      <button id="analyze" class="button primary" type="submit">Review detected skills</button>
       <p id="requestError" class="form-error" role="alert" hidden></p>
     </form>
 
@@ -193,13 +207,14 @@
       <button class="nav-button" type="button" data-section="interview" aria-controls="interview">Interview prep</button>
       <button class="nav-button" type="button" data-section="workflow" aria-controls="workflow">Agent workflow</button>
     </nav>
+    <p id="demoRepository" class="demo-repo hint" hidden><a href="https://github.com/madhav1431-create/career-launch-ai">Set up your own analysis on GitHub</a></p>
   </aside>
 
   <main id="main">
     <header class="topbar">
       <div>
         <h1 id="pageTitle" tabindex="-1">Career dashboard</h1>
-        <p class="status" id="status" role="status">Ready to analyze</p>
+        <p class="status" id="status" role="status">Ready to review</p>
       </div>
       <div class="topbar-actions">
         <button class="button" id="report" type="button" hidden>Print report</button>
@@ -209,12 +224,47 @@
 
     <div id="welcome" class="welcome">
       <h2>See where your resume fits</h2>
-      <p>Compare the skills in your resume with a role or job description. See the lines behind each match and get a plan for the gaps.</p>
+      <p>Review and correct detected skills before scoring. Then compare your resume with a role or job description and get a plan for the gaps.</p>
       <div class="demo-action">
         <button class="button" id="tryDemo" type="button">Try demo</button>
         <span class="hint">Uses a synthetic resume</span>
       </div>
     </div>
+
+    <section id="skillReview" aria-label="Review detected skills" hidden>
+      <p class="notice" id="reviewContext"></p>
+      <div class="grid">
+        <div class="card">
+          <h2>Resume skills</h2>
+          <p class="hint">Keep skills the resume supports. Explicit denials start unchecked.</p>
+          <div id="reviewResumeSkills" class="stack"></div>
+          <div class="review-tools">
+            <div class="field">
+              <label for="resumeSkillToAdd">Add a resume skill</label>
+              <select id="resumeSkillToAdd"></select>
+            </div>
+            <button type="button" class="button" id="addResumeSkill">Add skill</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Job requirements</h2>
+          <p class="hint">Separate required skills from preferred ones and ignore irrelevant mentions.</p>
+          <div id="reviewJobSkills" class="stack"></div>
+          <div class="review-tools">
+            <div class="field">
+              <label for="jobSkillToAdd">Add a requirement</label>
+              <select id="jobSkillToAdd"></select>
+            </div>
+            <button type="button" class="button" id="addJobSkill">Add requirement</button>
+          </div>
+        </div>
+      </div>
+      <div class="review-actions">
+        <button type="button" class="button primary" id="scoreReviewed">Score reviewed skills</button>
+        <button type="button" class="button" id="cancelReview">Back to uploads</button>
+      </div>
+      <p id="reviewError" class="form-error section-gap" role="alert" hidden></p>
+    </section>
 
     <div id="results" hidden>
       <header class="print-only"><h1>CareerLaunch AI report</h1><p id="printSummary"></p></header>
@@ -224,10 +274,15 @@
         <div class="coverage">
           <div id="coverageNumber" class="coverage-number"></div>
           <div>
-            <h2>Skill coverage</h2>
+            <h2>Required skill coverage</h2>
             <p id="coverageDetail"></p>
+            <p id="preferredDetail" hidden></p>
             <button class="text-button" type="button" data-section="skills">View skill evidence</button>
           </div>
+        </div>
+        <div id="priorityGaps" class="section-gap" hidden>
+          <h2 class="compact-heading">Top gaps to work on</h2>
+          <div id="gapCards" class="grid gap-grid"></div>
         </div>
         <div class="card section-gap">
           <h2>Profile overview</h2>
@@ -245,12 +300,16 @@
 
       <section id="skills" class="grid" aria-label="Skill evidence" hidden>
         <div class="card">
-          <h2>Matched requirements</h2>
+          <h2>Matched required skills</h2>
           <div id="matchedSkills" class="stack"></div>
         </div>
         <div class="card">
-          <h2>Requirements missing from the resume</h2>
+          <h2>Required skills missing from the resume</h2>
           <div id="missingSkills" class="stack"></div>
+        </div>
+        <div class="card" id="preferredSkillCard" hidden>
+          <h2>Preferred skills</h2>
+          <div id="preferredSkills" class="stack"></div>
         </div>
         <div class="card" id="otherSkillCard" hidden>
           <h2>Other detected skills</h2>
@@ -286,13 +345,14 @@
 
       <section id="workflow" aria-label="Agent workflow" hidden>
         <div class="card">
-          <h2>Analysis log</h2>
+          <h2 id="workflowTitle">Analysis log</h2>
           <div id="agentLogs"></div>
         </div>
       </section>
     </div>
   </main>
 </div>
+<!-- STATIC_DEMO_DATA -->
 <script>
   const courseLinks = {
     'python': 'https://www.coursera.org/learn/python',
@@ -347,6 +407,7 @@
 
   const byId = id => document.getElementById(id);
   const form = byId('reviewForm');
+  const staticDemo = byId('staticDemoData');
   const sections = document.querySelectorAll('#results > section');
   const navigation = document.querySelectorAll('.nav-button');
   const stageTitles = {
@@ -357,6 +418,9 @@
   };
   const evidenceLabels = {
     resume: 'Resume',
+    resume_denial: 'Resume · explicit gap',
+    resume_excluded: 'Resume · excluded during review',
+    review: 'Skill review',
     requirements: 'Job description',
     role: 'Role checklist',
   };
@@ -365,8 +429,12 @@
     react: 'React', 'node.js': 'Node.js', sql: 'SQL', html: 'HTML', css: 'CSS',
     java: 'Java', r: 'R', go: 'Go', mlops: 'MLOps', nlp: 'NLP',
     aws: 'AWS', pytorch: 'PyTorch', github: 'GitHub', excel: 'Excel',
+    'power bi': 'Power BI', git: 'Git', pandas: 'Pandas', numpy: 'NumPy',
   };
   let busy = false;
+  let reviewDraft = null;
+  let hasResults = false;
+  let activeSection = 'overview';
 
   function element(tag, className, text) {
     const node = document.createElement(tag);
@@ -376,7 +444,8 @@
   }
 
   function displaySkill(skill) {
-    return Object.hasOwn(skillSpellings, skill) ? skillSpellings[skill] : skill;
+    if (Object.hasOwn(skillSpellings, skill)) return skillSpellings[skill];
+    return skill.charAt(0).toUpperCase() + skill.slice(1);
   }
 
   function strings(values) {
@@ -410,16 +479,33 @@
 
   function selectSection(id, focus = true) {
     const section = byId(id);
-    byId('pageTitle').textContent = section.getAttribute('aria-label');
+    activeSection = id;
     for (const panel of sections) panel.hidden = panel !== section;
     for (const button of navigation) {
       if (button.dataset.section === id) button.setAttribute('aria-current', 'true');
       else button.removeAttribute('aria-current');
     }
-    if (focus) {
-      byId('pageTitle').focus({ preventScroll: true });
-      byId('main').scrollIntoView({ block: 'start' });
-    }
+    showHeading(section.getAttribute('aria-label'), focus);
+  }
+
+  function showHeading(title, focus = true) {
+    const heading = byId('pageTitle');
+    heading.textContent = title;
+    if (!focus) return;
+    heading.focus({ preventScroll: true });
+    byId('main').scrollIntoView({ block: 'start' });
+  }
+
+  function showView(view) {
+    form.hidden = Boolean(staticDemo) || view === 'review';
+    byId('demoRepository').hidden = !staticDemo;
+    byId('tryDemo').hidden = Boolean(staticDemo);
+    byId('welcome').hidden = view !== 'welcome';
+    byId('skillReview').hidden = view !== 'review';
+    byId('results').hidden = view !== 'results';
+    byId('resultNav').hidden = view !== 'results';
+    byId('report').hidden = view !== 'results';
+    byId('newAnalysis').hidden = view !== 'results';
   }
 
   for (const button of document.querySelectorAll('[data-section]')) {
@@ -444,9 +530,47 @@
 
   form.addEventListener('submit', event => {
     event.preventDefault();
-    submitAnalysis('/analyze', new FormData(form));
+    const upload = new FormData(form);
+    sendRequest('/preview', upload, 'Reading resume and requirements…', byId('requestError'), data => {
+      openReview(data, upload);
+    });
   });
-  byId('tryDemo').addEventListener('click', () => submitAnalysis('/demo'));
+  byId('tryDemo').addEventListener('click', () => {
+    sendRequest('/demo', null, 'Loading the sample analysis…', null, completeAnalysis);
+  });
+  byId('scoreReviewed').addEventListener('click', () => {
+    const { upload, resume, requirements } = reviewDraft;
+    const requirementsFor = classification => Array.from(requirements)
+      .filter(([, status]) => status === classification).map(([skill]) => skill);
+    upload.set('review', JSON.stringify({
+      resume_skills: Array.from(resume).filter(([, included]) => included).map(([skill]) => skill),
+      required_skills: requirementsFor('required'),
+      preferred_skills: requirementsFor('preferred'),
+    }));
+    sendRequest('/analyze', upload, 'Scoring the reviewed skills…', byId('reviewError'), completeAnalysis);
+  });
+  byId('cancelReview').addEventListener('click', () => {
+    reviewDraft = null;
+    showView(hasResults ? 'results' : 'welcome');
+    byId('status').textContent = hasResults ? 'Previous analysis' : 'Ready to review';
+    if (hasResults) selectSection(activeSection, false);
+    else showHeading('Career dashboard', false);
+    byId('analyze').focus();
+  });
+  byId('addResumeSkill').addEventListener('click', () => {
+    const skill = byId('resumeSkillToAdd').value;
+    if (!skill) return;
+    reviewDraft.resume.set(skill, true);
+    renderReviewResume();
+    byId('resumeSkillToAdd').focus();
+  });
+  byId('addJobSkill').addEventListener('click', () => {
+    const skill = byId('jobSkillToAdd').value;
+    if (!skill) return;
+    reviewDraft.requirements.set(skill, 'required');
+    renderReviewRequirements();
+    byId('jobSkillToAdd').focus();
+  });
   byId('report').addEventListener('click', () => window.print());
   byId('theme').addEventListener('click', event => {
     const dark = document.documentElement.dataset.theme !== 'dark';
@@ -454,72 +578,196 @@
     event.currentTarget.setAttribute('aria-pressed', String(dark));
   });
 
-  async function submitAnalysis(path, body) {
+  function setBusy(value) {
+    busy = value;
+    for (const id of ['analyze', 'tryDemo', 'scoreReviewed', 'cancelReview']) byId(id).disabled = value;
+    form.inert = value;
+    byId('skillReview').inert = value;
+  }
+
+  async function sendRequest(path, body, progress, errorTarget, onSuccess) {
     if (busy) return;
-    busy = true;
-    byId('analyze').disabled = true;
-    byId('tryDemo').disabled = true;
-    byId('requestError').hidden = true;
-    const demo = path === '/demo';
-    byId('status').textContent = demo ? 'Loading the sample analysis…' : 'Analyzing your resume…';
+    setBusy(true);
+    if (errorTarget) errorTarget.hidden = true;
+    byId('status').textContent = progress;
 
     try {
       const response = await fetch(path, { method: 'POST', body });
       const data = await response.json().catch(() => null);
       if (!response.ok || !data?.success) {
-        const message = data?.error || 'The server could not complete the analysis. Try again.';
-        if (!demo) {
-          byId('requestError').textContent = message;
-          byId('requestError').hidden = false;
-        }
-        byId('status').textContent = demo ? message : 'Analysis could not be completed';
+        showRequestError(errorTarget, data?.error || 'The server could not complete the request. Try again.');
         return;
       }
-
-      renderResults(data);
-      byId('welcome').hidden = true;
-      byId('results').hidden = false;
-      byId('resultNav').hidden = false;
-      byId('newAnalysis').hidden = false;
-      byId('report').hidden = false;
-      byId('status').textContent = demo ? 'Demo analysis complete' : 'Analysis complete';
-      selectSection('overview');
+      onSuccess(data);
     } catch {
-      const message = 'Could not load the analysis. Check your connection and try again.';
-      byId('status').textContent = message;
-      if (!demo) {
-        byId('requestError').textContent = message;
-        byId('requestError').hidden = false;
-      }
+      showRequestError(errorTarget, 'Could not load the request. Check your connection and try again.');
     } finally {
-      busy = false;
-      byId('analyze').disabled = false;
-      byId('tryDemo').disabled = false;
+      setBusy(false);
     }
   }
 
+  function showRequestError(target, message) {
+    byId('status').textContent = target ? 'Request could not be completed' : message;
+    if (!target) return;
+    target.textContent = message;
+    target.hidden = false;
+  }
+
+  function openReview(data, upload) {
+    const resume = new Map(strings(data.resume_skills).map(skill => [skill, true]));
+    for (const skill of Object.keys(data.negated_skill_evidence || {})) {
+      if (!resume.has(skill)) resume.set(skill, false);
+    }
+    const requirements = new Map([
+      ...strings(data.required_skills).map(skill => [skill, 'required']),
+      ...strings(data.preferred_skills).map(skill => [skill, 'preferred']),
+    ]);
+    const catalog = strings(data.skill_catalog).sort((a, b) => displaySkill(a).localeCompare(displaySkill(b)));
+    reviewDraft = { data, upload, resume, requirements, catalog };
+    byId('reviewContext').textContent = requirementSource(data);
+    byId('reviewError').hidden = true;
+    renderReviewResume();
+    renderReviewRequirements();
+    showView('review');
+    byId('status').textContent = 'Confirm the skills before scoring';
+    showHeading('Review detected skills');
+  }
+
+  function fillAddOptions(selectId, buttonId, active) {
+    const select = byId(selectId);
+    const available = reviewDraft.catalog.filter(skill => !active.has(skill));
+    const placeholder = new Option(available.length ? 'Choose a skill' : 'All skills listed', '');
+    select.replaceChildren(placeholder, ...available.map(skill => new Option(displaySkill(skill), skill)));
+    select.disabled = !available.length;
+    byId(buttonId).disabled = !available.length;
+  }
+
+  function renderReviewResume() {
+    const { data, resume } = reviewDraft;
+    const rows = Array.from(resume).map(([skill, included]) => {
+      const row = element('div', 'skill-item review-row');
+      const label = element('label', null, displaySkill(skill));
+      const checkbox = element('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = included;
+      checkbox.addEventListener('change', () => resume.set(skill, checkbox.checked));
+      label.prepend(checkbox);
+      row.append(label);
+
+      const positive = data.skill_evidence?.[skill];
+      const denial = data.negated_skill_evidence?.[skill];
+      if (positive) row.append(evidenceQuote('resume', positive));
+      if (denial) row.append(evidenceQuote('resume_denial', denial));
+      if (!positive && !denial) row.append(element('p', 'hint', 'Added during review'));
+      return row;
+    });
+    byId('reviewResumeSkills').replaceChildren(...(rows.length ? rows : [emptyMessage('No skills were detected.')]));
+    fillAddOptions('resumeSkillToAdd', 'addResumeSkill', resume);
+  }
+
+  function renderReviewRequirements() {
+    const { data, requirements } = reviewDraft;
+    const rows = Array.from(requirements).map(([skill, classification], index) => {
+      const row = element('div', 'skill-item review-row');
+      const control = element('div', 'field');
+      const label = element('label', null, displaySkill(skill));
+      const select = element('select');
+      select.id = 'requirement-classification-' + index;
+      label.htmlFor = select.id;
+      select.append(new Option('Required', 'required'), new Option('Preferred', 'preferred'), new Option('Ignore', 'ignore'));
+      select.value = classification;
+      select.addEventListener('change', () => requirements.set(skill, select.value));
+      control.append(label, select);
+      row.append(control);
+      if (data.requirement_evidence?.[skill]) row.append(evidenceQuote('requirements', data.requirement_evidence[skill]));
+      return row;
+    });
+    byId('reviewJobSkills').replaceChildren(...(rows.length ? rows : [emptyMessage('No requirements were detected.')]));
+    fillAddOptions('jobSkillToAdd', 'addJobSkill', requirements);
+  }
+
+  function requirementSource(data) {
+    return data.jd_source === 'role_based' ? 'Built-in checklist for ' + data.target_role : 'Job description for ' + data.target_role;
+  }
+
+  function completeAnalysis(data) {
+    renderResults(data);
+    hasResults = true;
+    reviewDraft = null;
+    showView('results');
+    byId('status').textContent = staticDemo ? 'Interactive synthetic demo'
+      : data.demo ? 'Demo analysis complete'
+      : 'Analysis complete';
+    selectSection('overview', !staticDemo);
+  }
+
   function renderResults(data) {
-    const roleBased = data.jd_source === 'role_based';
-    const requirementCount = strings(data.jd_skills).length;
+    const requirementCount = strings(data.required_skills).length;
+    const preferredCount = strings(data.preferred_skills).length;
     const matched = strings(data.matched_skills);
+    const preferredMatches = strings(data.matched_preferred_skills).length;
     const percentage = requirementCount ? data.match_score + '%' : '—';
-    const sourceText = roleBased ? 'Built-in checklist for ' + data.target_role : 'Job description for ' + data.target_role;
-    byId('requirementSource').textContent = (data.demo ? 'Synthetic sample · ' : '') + sourceText;
+    const sourceText = requirementSource(data);
+    const reviewLabel = data.review_applied ? ' · Reviewed skills' : '';
+    byId('requirementSource').textContent = (data.demo ? 'Synthetic sample · ' : '') + sourceText + reviewLabel;
     byId('coverageNumber').textContent = percentage;
     byId('coverageDetail').textContent = requirementCount
-      ? matched.length + ' of ' + requirementCount + ' recognized requirements found in your resume'
-      : 'No supported skill terms were detected in the job description';
+      ? matched.length + ' of ' + requirementCount + ' required skills covered'
+      : 'No required skills to score';
+    byId('preferredDetail').hidden = !preferredCount;
+    byId('preferredDetail').textContent = 'Preferred coverage · ' + preferredMatches + ' of ' + preferredCount;
     byId('profileOverview').textContent = data.overview || 'Profile overview unavailable.';
     byId('strategyText').textContent = data.career_strategy || 'Career strategy unavailable.';
-    byId('printSummary').textContent = sourceText + ' · Skill coverage ' + percentage;
+    byId('printSummary').textContent = sourceText + ' · Required skill coverage ' + percentage;
+    byId('workflowTitle').textContent = staticDemo ? 'Recorded demo run' : 'Analysis log';
 
+    const steps = records(data.roadmap).filter(step => typeof step.skill === 'string' && Number.isFinite(step.weeks));
+    renderPriorityGaps(data, steps);
     renderPriorities(data.risk_assessment);
     renderSkills(data, matched);
     renderHiring(data.hiring_simulation);
-    renderLearning(data.roadmap);
+    renderLearning(steps);
     renderProjects(data.project_recommendations, data.certifications);
     renderQuestions(data.interview_questions);
     renderLog(data.agent_logs);
+  }
+
+  function renderPriorityGaps(data, steps) {
+    const gaps = records(data.priority_gaps).filter(gap => typeof gap.skill === 'string').slice(0, 3);
+    const cards = gaps.map(gap => {
+      const card = element('article', 'card priority-card');
+      const kind = gap.kind === 'preferred' ? 'Preferred skill' : 'Required skill';
+      card.append(element('h3', null, displaySkill(gap.skill)), element('p', 'priority-kind', kind));
+      if (gap.requirement_line) {
+        card.append(evidenceQuote('requirements', gap.requirement_line));
+      } else {
+        const fallback = gap.requirement_source === 'checklist' ? 'On the role checklist.' : 'Selected during review.';
+        card.append(element('p', 'hint', fallback));
+      }
+      if (gap.resume_line) {
+        const label = gap.resume_status === 'excluded' ? 'resume_excluded' : 'resume_denial';
+        card.append(evidenceQuote(label, gap.resume_line));
+      } else {
+        card.append(element('p', 'hint', 'Resume · No supporting line found'));
+      }
+
+      const stepIndex = steps.findIndex(step => step.skill === gap.skill);
+      const stepId = 'roadmap-step-' + stepIndex;
+      const action = element('p', 'gap-next');
+      const link = element('a', null, gap.action || 'Open the learning plan');
+      link.href = stepIndex < 0 ? '#learning' : '#' + stepId;
+      link.addEventListener('click', event => {
+        event.preventDefault();
+        const step = byId(stepId);
+        selectSection('learning', !step);
+        if (step) step.focus();
+      });
+      action.append(link);
+      card.append(action);
+      return card;
+    });
+    byId('priorityGaps').hidden = !cards.length;
+    byId('gapCards').replaceChildren(...cards);
   }
 
   function renderPriorities(assessment) {
@@ -541,21 +789,37 @@
   function renderSkills(data, matched) {
     const resumeEvidence = data.skill_evidence || {};
     const requirementEvidence = data.requirement_evidence || {};
-    const extra = strings(data.resume_skills).filter(skill => !matched.includes(skill));
+    const denialEvidence = data.negated_skill_evidence || {};
+    const preferredMatched = strings(data.matched_preferred_skills);
+    const preferredMissing = strings(data.missing_preferred_skills);
+    const resumeSkills = strings(data.resume_skills);
+    const extra = resumeSkills.filter(skill => !matched.includes(skill) && !preferredMatched.includes(skill));
     const groups = [
       ['matchedSkills', matched, 'No matched skills were found.', true],
       ['missingSkills', strings(data.missing_skills), 'No gaps were detected among recognized requirements.', true],
+      ['preferredSkills', [...preferredMatched, ...preferredMissing], '', true],
       ['otherSkills', extra, '', false],
     ];
 
     byId('otherSkillCard').hidden = extra.length === 0;
+    byId('preferredSkillCard').hidden = preferredMatched.length + preferredMissing.length === 0;
     for (const [id, skills, empty, showRequirements] of groups) {
       const rows = skills.map(skill => {
         const row = element('article', 'skill-item');
         row.append(element('h3', null, displaySkill(skill)));
+        if (id === 'preferredSkills') {
+          const status = preferredMatched.includes(skill) ? 'Covered' : 'Gap';
+          row.append(element('span', 'badge', status));
+        }
         const resumeLine = resumeEvidence[skill];
         const jdLine = showRequirements && requirementEvidence[skill];
-        if (typeof resumeLine === 'string' && resumeLine) row.append(evidenceQuote('resume', resumeLine));
+        const included = resumeSkills.includes(skill);
+        if (typeof resumeLine === 'string' && resumeLine) {
+          row.append(evidenceQuote(included ? 'resume' : 'resume_excluded', resumeLine));
+        } else if (included && data.review_applied) {
+          row.append(element('p', 'hint', 'Included during review · No extracted line'));
+        }
+        if (denialEvidence[skill]) row.append(evidenceQuote('resume_denial', denialEvidence[skill]));
         if (typeof jdLine === 'string' && jdLine) row.append(evidenceQuote('requirements', jdLine));
         return row;
       });
@@ -589,18 +853,20 @@
     byId('hiringStages').replaceChildren(...stages);
   }
 
-  function renderLearning(roadmap) {
-    const steps = records(roadmap).filter(step => typeof step.skill === 'string' && Number.isFinite(step.weeks));
+  function renderLearning(steps) {
     const weeks = steps.reduce((total, step) => total + step.weeks, 0);
     byId('totalWeeks').textContent = weeks
       ? 'Estimated learning time · ' + weeks + (weeks === 1 ? ' week' : ' weeks')
       : 'No learning steps were generated for this analysis.';
     byId('roadmapList').replaceChildren(...steps.map((step, index) => {
       const row = element('li', 'card');
+      row.id = 'roadmap-step-' + index;
+      row.tabIndex = -1;
       const detail = element('div');
       detail.append(
         element('h3', null, displaySkill(step.skill)),
-        element('small', null, step.weeks + (step.weeks === 1 ? ' week' : ' weeks')),
+        element('small', null, (step.priority === 'preferred' ? 'Preferred · ' : '')
+          + step.weeks + (step.weeks === 1 ? ' week' : ' weeks')),
       );
       const href = Object.hasOwn(courseLinks, step.skill) ? courseLinks[step.skill]
         : 'https://www.coursera.org/search?query=' + encodeURIComponent(step.skill);
@@ -665,6 +931,17 @@
       row.append(element('time', 'muted', entry.time), detail);
       return row;
     }));
+  }
+
+  if (staticDemo) {
+    showView('welcome');
+    try {
+      const data = JSON.parse(staticDemo.textContent);
+      if (!data.success) throw new Error('Invalid demo data');
+      completeAnalysis(data);
+    } catch {
+      byId('status').textContent = 'The synthetic demo is temporarily unavailable';
+    }
   }
 </script>
 </body>

@@ -7,21 +7,31 @@ class SkillGapAgent(BaseAgent):
         super().__init__("Skill Gap Agent")
 
     def run(self, state: dict):
-        requirements = state["jd_skills"]
+        requirements = state["required_skills"]
         gaps = compute_skill_gap(state["resume_skills"], requirements)
+        preferred_gaps = compute_skill_gap(state["resume_skills"], state["preferred_skills"])
         state["missing_skills"] = gaps
-        state["overview"] = self._generate_overview(requirements, state["matched_skills"], gaps)
-        self.log(state, f"Target skills without a resume match: {len(gaps)}")
+        state["missing_preferred_skills"] = preferred_gaps
+        state["overview"] = self._generate_overview(state)
+        self.log(state, f"Required skills without a match: {len(gaps)}")
         return state
 
-    def _generate_overview(self, requirements, matched, gaps):
-        if not requirements:
+    def _generate_overview(self, state):
+        required = state["required_skills"]
+        preferred = state["preferred_skills"]
+        if not required and not preferred:
             return (
-                "The job description contains no supported skill terms. "
+                "There are no supported skills in the selected requirements. "
                 "Try a more detailed description or use the built-in role requirements."
             )
 
-        overview = f"Your resume mentions {len(matched)} of {len(requirements)} target skills."
+        matched = state["matched_skills"]
+        gaps = state["missing_skills"]
+        overview = f"Your profile matches {len(matched)} of {len(required)} required skills."
+        if not required:
+            overview = "The selected requirements contain only preferred skills."
+        if preferred:
+            overview += f" It also matches {len(state['matched_preferred_skills'])} of {len(preferred)} preferred skills."
         if matched:
             overview += f" Matching examples include {', '.join(matched[:4])}."
         if gaps:
