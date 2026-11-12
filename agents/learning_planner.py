@@ -1,4 +1,5 @@
 from agents.base_agent import BaseAgent
+from agents.practice_projects import practice_project
 from engine import skill_graph
 
 class LearningPlannerAgent(BaseAgent):
@@ -47,7 +48,8 @@ class LearningPlannerAgent(BaseAgent):
             roadmap.append({
                 "step": i + 1,
                 "skill": skill,
-                "weeks": weeks
+                "weeks": weeks,
+                "practice": practice_project(skill),
             })
 
         return roadmap

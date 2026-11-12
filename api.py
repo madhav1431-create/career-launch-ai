@@ -8,6 +8,7 @@ from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from werkzeug.exceptions import RequestEntityTooLarge
 
+from agents.practice_projects import practice_project
 from core.orchestrator import Orchestrator
 from engine import UnreadablePDFError, extract_text_from_pdf, role_skill_requirements, skills
 
@@ -31,14 +32,6 @@ RESULT_FIELDS = (
     "career_strategy", "interview_questions", "career_readiness_score",
     "agent_logs", "hiring_simulation", "risk_assessment", "ai_enabled",
 )
-PRACTICE_ACTIONS = {
-    "power bi": "Build a one-page Power BI dashboard for a public dataset and explain one trend.",
-    "statistics": "Compare two groups in a public dataset and explain the uncertainty in your result.",
-    "sql": "Write a query with a join and aggregation, then verify the result against a small sample.",
-    "docker": "Package a small app in Docker and document how to run it from a clean machine.",
-    "git": "Use a branch to make and review a change, then document the workflow.",
-}
-
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 2 * MAX_PDF_BYTES + 64 * 1024
 app.config["MAX_FORM_PARTS"] = 10
@@ -76,15 +69,16 @@ def result_response(state, *, demo=False):
 
 def priority_gaps(state):
     """Show required gaps first and follow the roadmap within each group."""
-    roadmap_order = {step["skill"]: step["step"] for step in state["roadmap"]}
+    roadmap = {step["skill"]: step for step in state["roadmap"]}
     checklist = role_skill_requirements[state["target_role"]] if state["jd_source"] == "role_based" else ()
     gaps = []
     for kind, field in (("required", "missing_skills"), ("preferred", "missing_preferred_skills")):
-        ordered = sorted(state[field], key=lambda skill: roadmap_order.get(skill, float("inf")))
+        ordered = sorted(state[field], key=lambda skill: roadmap.get(skill, {}).get("step", float("inf")))
         for skill in ordered:
             negated = state["negated_skill_evidence"].get(skill)
             evidence = state["excluded_skill_evidence"].get(skill)
             requirement = state["requirement_evidence"].get(skill)
+            practice = roadmap.get(skill, {}).get("practice") or practice_project(skill)
             gaps.append({
                 "skill": skill,
                 "kind": kind,
@@ -92,9 +86,8 @@ def priority_gaps(state):
                 "requirement_source": "description" if requirement else "checklist" if skill in checklist else "review",
                 "resume_line": evidence or negated,
                 "resume_status": "excluded" if evidence else "negated" if negated else "missing",
-                "action": PRACTICE_ACTIONS.get(
-                    skill, f"Build a small example using {skill} and document how you checked it."
-                ),
+                "action": practice["project"],
+                "practice": practice,
             })
             if len(gaps) == 3:
                 return gaps

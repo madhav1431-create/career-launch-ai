@@ -1,0 +1,182 @@
+[
+  {
+    "id": "transport-data-pipelines",
+    "role": "Data Scientist",
+    "description": "Required: Airflow, Python and SQL. Preferred: Spark and Docker.",
+    "required": ["airflow", "python", "sql"],
+    "preferred": ["spark", "docker"],
+    "resumes": [
+      {
+        "id": "shipment-pipeline-owner",
+        "pages": [{"main": ["Shipment Pipeline Owner", "Built Apache Airflow jobs using Python and SQL.", "No Spark experience. Tested each job in Docker."]}],
+        "positive": ["airflow", "python", "sql", "docker"],
+        "negated": ["spark"]
+      },
+      {
+        "id": "transport-planner",
+        "pages": [{"main": ["Transport Planner", "Wrote SQL extracts and monitored Python schedules.", "No exposure to Apache Airflow."], "sidebar": ["Tools", "Apache Spark", "Excel"]}],
+        "positive": ["sql", "python", "spark", "excel"],
+        "negated": ["airflow"]
+      },
+      {
+        "id": "route-forecaster",
+        "pages": [
+          {"main": ["Route Forecaster", "No hands-on experience with", "Airflow or Spark."], "sidebar": ["Toolkit", "Python", "Docker"]},
+          {"main": ["Community work", "Published forecasts in Excel for a bike lending program."]}
+        ],
+        "positive": ["python", "docker", "excel"],
+        "negated": ["airflow", "spark"]
+      }
+    ]
+  },
+  {
+    "id": "library-catalog-interface",
+    "role": "Frontend Developer",
+    "description": "Required skills: React, JavaScript and HTML. TypeScript and CSS are preferred.",
+    "required": ["react", "javascript", "html"],
+    "preferred": ["typescript", "css"],
+    "resumes": [
+      {
+        "id": "catalog-ui-developer",
+        "pages": [{"main": ["Catalog UI Developer", "Built a search UI using not only React but also JavaScript.", "Wrote the HTML templates. I've never used TypeScript."]}],
+        "positive": ["react", "javascript", "html"],
+        "negated": ["typescript"]
+      },
+      {
+        "id": "component-stylist",
+        "pages": [{"main": ["Component Stylist", "Updated CSS styles for the design guide.", "Owned the dark theme rollout."], "sidebar": ["Toolkit", "ReactJS", "I haven't used HTML or JavaScript."]}],
+        "positive": ["css", "react"],
+        "negated": ["html", "javascript"]
+      },
+      {
+        "id": "community-events-developer",
+        "pages": [
+          {"main": ["Community Events Developer", "No professional React experience.", "Wrote a neighborhood event guide."]},
+          {"main": ["Personal work", "Built a React calendar using JavaScript."]}
+        ],
+        "positive": ["react", "javascript"],
+        "negated": ["react"]
+      }
+    ]
+  },
+  {
+    "id": "subscription-billing-service",
+    "role": "Backend Developer",
+    "description": "Required: Java, Redis and PostgreSQL. Preferred: Go programming and Kubernetes.",
+    "required": ["java", "redis", "postgresql"],
+    "preferred": ["go", "kubernetes"],
+    "resumes": [
+      {
+        "id": "billing-service-owner",
+        "pages": [{"main": ["Billing Service Owner", "Built a Java service with Redis and Postgres.", "Wrote its test client in Golang. I have not used Kubernetes."]}],
+        "positive": ["java", "redis", "postgresql", "go"],
+        "negated": ["kubernetes"]
+      },
+      {
+        "id": "billing-maintainer",
+        "pages": [{"main": ["Billing Maintainer", "Used Java and PostgreSQL to reconcile invoices.", "No production experience with Redis."], "sidebar": ["Tools", "K8s", "Terraform"]}],
+        "positive": ["java", "postgresql", "kubernetes", "terraform"],
+        "negated": ["redis"]
+      },
+      {
+        "id": "service-integrations",
+        "pages": [
+          {"main": ["Service Integrations", "No experience with Java or PostgreSQL; deployed Redis."]},
+          {"main": ["Testing", "Wrote a Golang client. I haven't worked with Kubernetes."]}
+        ],
+        "positive": ["redis", "go"],
+        "negated": ["java", "postgresql", "kubernetes"]
+      }
+    ]
+  },
+  {
+    "id": "model-release-infrastructure",
+    "role": "ML Engineer",
+    "description": "Required: PyTorch, Docker and Kubernetes. Preferred: CI/CD and MLOps.",
+    "required": ["pytorch", "docker", "kubernetes"],
+    "preferred": ["ci/cd", "mlops"],
+    "resumes": [
+      {
+        "id": "release-infrastructure-owner",
+        "pages": [{"main": ["Release Infrastructure Owner", "Trained a model in PyTorch and ran Docker images on K8s.", "Had no issues deploying Kubernetes workloads.", "Used GitHub for versioning; unfamiliar with CI/CD."]}],
+        "positive": ["pytorch", "docker", "kubernetes", "github"],
+        "negated": ["ci/cd"]
+      },
+      {
+        "id": "training-infrastructure",
+        "pages": [{"main": ["Training Infrastructure", "Packaged training code in Docker and worked with PyTorch.", "Ran experiments for the research group."], "sidebar": ["Tools", "CI/CD", "I have yet to use Kubernetes."]}],
+        "positive": ["docker", "pytorch", "ci/cd"],
+        "negated": ["kubernetes"]
+      },
+      {
+        "id": "learning-infrastructure",
+        "pages": [
+          {"main": ["Learning Infrastructure", "No previous experience with Docker, Kubernetes, or MLOps."], "sidebar": ["Tools", "Git"]},
+          {"main": ["Workshop projects", "Created PyTorch exercises and used CI/CD to publish them."]}
+        ],
+        "positive": ["git", "pytorch", "ci/cd"],
+        "negated": ["docker", "kubernetes", "mlops"]
+      }
+    ]
+  },
+  {
+    "id": "support-ticket-understanding",
+    "role": "AI Engineer",
+    "description": "Required: NLP, transformers and Python. FastAPI and Docker are preferred.",
+    "required": ["nlp", "transformers", "python"],
+    "preferred": ["fastapi", "docker"],
+    "resumes": [
+      {
+        "id": "support-model-developer",
+        "pages": [{"main": ["Support Model Developer", "Used Python and transformers to build an NLP classifier.", "I haven't used FastAPI; packaged the service in Docker."]}],
+        "positive": ["python", "transformers", "nlp", "docker"],
+        "negated": ["fastapi"]
+      },
+      {
+        "id": "ticket-data-specialist",
+        "pages": [{"main": ["Ticket Data Specialist", "Built a text normalization pipeline in Python.", "Applied NLP to categorize incident reports."], "sidebar": ["Tools", "FastAPI", "Never used transformers."]}],
+        "positive": ["python", "nlp", "fastapi"],
+        "negated": ["transformers"]
+      },
+      {
+        "id": "support-automation",
+        "pages": [
+          {"main": ["Support Automation", "I haven't used natural language processing", "or transformers."]},
+          {"main": ["Automation work", "Wrapped a Python tool in Docker for weekly reporting."]}
+        ],
+        "positive": ["python", "docker"],
+        "negated": ["nlp", "transformers"]
+      }
+    ]
+  },
+  {
+    "id": "stock-replenishment-reporting",
+    "role": "Data Analyst",
+    "description": "Required: Power BI, Excel and SQL. Nice to have: Tableau and R.",
+    "required": ["power bi", "excel", "sql"],
+    "preferred": ["tableau", "r"],
+    "resumes": [
+      {
+        "id": "replenishment-analyst",
+        "pages": [{"main": ["Replenishment Analyst", "Reconciled Excel files and wrote SQL extracts for PowerBI.", "No prior experience in Tableau. Used R to compare metrics."]}],
+        "positive": ["excel", "sql", "power bi", "r"],
+        "negated": ["tableau"]
+      },
+      {
+        "id": "stock-dashboard-maintainer",
+        "pages": [{"main": ["Stock Dashboard Maintainer", "Maintained Excel templates and built Power BI dashboards.", "I have no exposure to SQL."], "sidebar": ["Tools", "Tableau", "R"]}],
+        "positive": ["excel", "power bi", "tableau", "r"],
+        "negated": ["sql"]
+      },
+      {
+        "id": "daily-stock-audit",
+        "pages": [
+          {"main": ["Daily Stock Audit", "I do not know Excel or Power BI."]},
+          {"main": ["Report migration", "Used SQL for reports. My SQL migration had no failures."]}
+        ],
+        "positive": ["sql"],
+        "negated": ["excel", "power bi"]
+      }
+    ]
+  }
+]

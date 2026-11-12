@@ -2,6 +2,8 @@
 
 import argparse
 import json
+import subprocess
+import sys
 from collections import Counter
 from contextlib import redirect_stdout
 from io import BytesIO, StringIO
@@ -108,7 +110,7 @@ def evaluate(cases, details=False):
 
 
 def print_report(comparisons, rankings, layouts):
-    print(f"\nHeld-out synthetic set: {sum(layouts.values())} resumes, {len(rankings)} job descriptions")
+    print(f"\nSynthetic benchmark set: {sum(layouts.values())} resumes, {len(rankings)} job descriptions")
     print("PDF layouts: " + ", ".join(f"{layout.lower()} {layouts[layout]}" for layout in LAYOUTS))
     print("\nSkill evidence (micro-averaged precision, recall, and F1)")
     print(f"{'Measure':<18} {'Method':<14} {'Precision':>10} {'Recall':>8} {'F1':>8}")
@@ -130,11 +132,39 @@ def print_report(comparisons, rankings, layouts):
     print("These examples measure evidence and coverage on synthetic documents.")
 
 
+def print_baseline(checkout, cases_path, details):
+    # Import the evaluator and app from the baseline checkout in a fresh process.
+    script = """
+import json
+import sys
+from pathlib import Path
+from training.benchmark_context import evaluate, print_report
+
+cases = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+print_report(*evaluate(cases, details="--details" in sys.argv[2:]))
+"""
+    command = [sys.executable, "-B", "-c", script, str(cases_path)]
+    if details:
+        command.append("--details")
+    print("Baseline checkout", flush=True)
+    subprocess.run(command, cwd=checkout, check=True)
+    print("\nCurrent checkout")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--details", action="store_true", help="Show errors and coverage for each case.")
+    parser.add_argument(
+        "--cases", type=Path, default=CASES_PATH, help="Path to a labeled benchmark fixture."
+    )
+    parser.add_argument(
+        "--baseline-checkout", type=Path, help="Evaluate the same fixture in an earlier checkout first."
+    )
     args = parser.parse_args()
-    cases = json.loads(CASES_PATH.read_text(encoding="utf-8"))
+    cases_path = args.cases.resolve()
+    cases = json.loads(cases_path.read_text(encoding="utf-8"))
+    if args.baseline_checkout:
+        print_baseline(args.baseline_checkout, cases_path, args.details)
     comparisons, rankings, layouts = evaluate(cases, args.details)
     print_report(comparisons, rankings, layouts)
 

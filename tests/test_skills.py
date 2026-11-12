@@ -1,8 +1,53 @@
 import unittest
+from io import BytesIO
 from unittest.mock import patch
 
 from core.orchestrator import Orchestrator
-from engine import classify_requirement_evidence, classify_resume_skill_evidence, detect_skill_evidence, detect_skills
+from engine import (
+    classify_requirement_evidence,
+    classify_resume_skill_evidence,
+    detect_skill_evidence,
+    detect_skills,
+    extract_text_from_pdf,
+)
+
+
+def _positioned_pdf(*pages):
+    """Build a tiny test PDF with exact line positions using the built-in PDF font."""
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+    children = []
+    for rows in pages:
+        page_number = len(objects) + 1
+        children.append(f"{page_number} 0 R")
+        instructions = []
+        for x, y, text in rows:
+            text = text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+            instructions.append(f"BT /F1 11 Tf {x} {y} Td ({text}) Tj ET")
+        stream = "\n".join(instructions).encode("ascii")
+        objects.append((
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+            f"/Resources << /Font << /F1 3 0 R >> >> /Contents {page_number + 1} 0 R >>"
+        ).encode("ascii"))
+        objects.append(f"<< /Length {len(stream)} >>\nstream\n".encode() + stream + b"\nendstream")
+    objects[1] = f"<< /Type /Pages /Count {len(children)} /Kids [{' '.join(children)}] >>".encode()
+
+    pdf = BytesIO(b"%PDF-1.4\n")
+    pdf.seek(0, 2)
+    offsets = []
+    for number, item in enumerate(objects, 1):
+        offsets.append(pdf.tell())
+        pdf.write(f"{number} 0 obj\n".encode() + item + b"\nendobj\n")
+    startxref = pdf.tell()
+    pdf.write(f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode())
+    for offset in offsets:
+        pdf.write(f"{offset:010d} 00000 n \n".encode())
+    pdf.write(f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{startxref}\n%%EOF".encode())
+    pdf.seek(0)
+    return pdf
 
 
 class SkillDetectionTests(unittest.TestCase):
@@ -51,6 +96,88 @@ class SkillDetectionTests(unittest.TestCase):
         self.assertEqual(set(denied), {"docker", "kubernetes", "vue"})
         self.assertEqual(denied["vue"], "I have never worked with\nVue.")
         self.assertEqual(detect_skills("No SQL migration issues."), ["sql"])
+
+    def test_negation_follows_wrapped_lists_and_stops_at_new_bullets(self):
+        text = (
+            "Never worked with\nDocker,\nJenkins,\nor Kubernetes.\n"
+            "No paid work involving Terraform,\n- Built a Python CLI.\n"
+            "Yet to write SQL, but used PostgreSQL for database administration."
+        )
+        found, denied = classify_resume_skill_evidence(text)
+        self.assertEqual(set(found), {"python", "postgresql"})
+        self.assertEqual(set(denied), {"docker", "kubernetes", "terraform", "sql"})
+        self.assertEqual(denied["kubernetes"], "Never worked with\nDocker,\nJenkins,\nor Kubernetes.")
+
+    def test_denial_section_stops_at_the_next_section(self):
+        text = (
+            "Tools I have not used:\n- Docker\n- Kubernetes\n"
+            "Projects\n- Built a Vue application with TypeScript."
+        )
+        found, denied = classify_resume_skill_evidence(text)
+        self.assertEqual(set(found), {"vue", "typescript"})
+        self.assertEqual(set(denied), {"docker", "kubernetes"})
+        self.assertEqual(denied["kubernetes"], "Tools I have not used:\n- Docker\n- Kubernetes")
+
+    def test_group_suffix_does_not_negate_individual_parenthetical_neighbors(self):
+        text = "Docker and Kubernetes: no hands-on\nexperience yet.\nPython, Java (no work experience)."
+        found, denied = classify_resume_skill_evidence(text)
+        self.assertEqual(set(found), {"python"})
+        self.assertEqual(set(denied), {"docker", "java", "kubernetes"})
+
+    def test_no_exposure_to_identifies_a_denial(self):
+        text = "No professional exposure to Scala or Spark."
+        found, denied = classify_resume_skill_evidence(text)
+        self.assertEqual(found, {})
+        self.assertEqual(denied, {"scala": text, "spark": text})
+
+
+class PDFLayoutTests(unittest.TestCase):
+    def test_columns_keep_wrapped_skills_and_denials_in_their_own_flow(self):
+        with _positioned_pdf([
+            (36, 740, "Built a Machine"), (352, 740, "Toolbox"),
+            (36, 720, "Learning classifier."), (352, 720, "SQL"),
+            (36, 700, "Never worked with"), (352, 700, "Python"),
+            (36, 680, "Docker or Kubernetes."), (352, 680, "Git"),
+        ]) as pdf:
+            text = extract_text_from_pdf(pdf, preserve_case=True)
+        self.assertIn("Docker or Kubernetes.\n\nToolbox\nSQL", text)
+        found, denied = classify_resume_skill_evidence(text)
+        self.assertEqual(found["machine learning"], "Built a Machine\nLearning classifier.")
+        self.assertEqual(found["python"], "Python")
+        self.assertEqual(denied["kubernetes"], "Never worked with\nDocker or Kubernetes.")
+        self.assertEqual(set(found), {"machine learning", "sql", "python", "git"})
+
+    def test_offset_columns_and_page_breaks_do_not_extend_a_denial(self):
+        with _positioned_pdf([
+            (36, 747, "Maintained Vue components."),
+            (352, 739, "Technical Skills"),
+            (36, 725, "No experience with Docker,"),
+            (352, 717, "Python,"),
+            (36, 703, "PostgreSQL, or Kafka."),
+            (352, 695, "Never written SQL,"),
+        ], [
+            (36, 747, "Git"),
+            (36, 725, "Shipped JavaScript fixes."),
+        ]) as pdf:
+            text = extract_text_from_pdf(pdf, preserve_case=True)
+        self.assertIn("Kafka.\n\nTechnical Skills", text)
+        self.assertIn("Never written SQL,\n\nGit", text)
+        found, denied = classify_resume_skill_evidence(text)
+        self.assertEqual(set(found), {"vue", "python", "git", "javascript"})
+        self.assertEqual(set(denied), {"docker", "postgresql", "kafka", "sql"})
+
+    def test_right_aligned_dates_keep_single_column_reading_order(self):
+        with _positioned_pdf([
+            (36, 740, "Data Assistant"), (405, 740, "June 2024 - Present"),
+            (36, 720, "Built SQL reports."),
+            (36, 700, "Reporting Intern"), (405, 700, "July 2023 - May 2024"),
+            (36, 680, "Prepared Excel reports."),
+        ]) as pdf:
+            text = extract_text_from_pdf(pdf, preserve_case=True)
+        self.assertEqual(text.splitlines(), [
+            "Data Assistant June 2024 - Present", "Built SQL reports.",
+            "Reporting Intern July 2023 - May 2024", "Prepared Excel reports.",
+        ])
 
 
 class RequirementPriorityTests(unittest.TestCase):

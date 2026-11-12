@@ -25,11 +25,11 @@ For optional Groq-generated coaching, copy `.env.example` to `.env` and set `GRO
 
 ## How the dashboard works
 
-- **Skill evidence.** The app detects whole skills and common aliases. Explicit denials such as “no experience with Python” appear separately from positive evidence. The review screen lets you correct what the app extracted.
+- **Skill evidence.** The app detects whole skills and common aliases. It separates text columns when a PDF has a consistent gap between them and recognizes common denials of experience across wrapped lines. The review screen shows the original evidence and lets you correct the results.
 - **Role coverage.** Required skills drive the main score. Preferred skills have a separate coverage figure. The built-in role checklists treat each skill as required.
-- **Priority actions.** The overview shows up to three gaps with the requirement, resume evidence when available, and a practical step linked to the learning plan.
+- **Priority actions.** The overview shows up to three gaps with the requirement, resume evidence when available, and a small project linked to its learning step. Each project lists what to produce and how to check the result.
 - **Practice hiring review.** ATS, recruiter, hiring manager, and technical panel views each show a concern, its supporting evidence, and a practical next step. [See the practice review](screenshots/hiring.png).
-- **Learning and interview prep.** A prerequisite-aware roadmap orders the skill gaps. Project ideas and practice questions help turn the roadmap into work you can show.
+- **Learning and interview prep.** A prerequisite-aware roadmap orders the skill gaps and gives each one a project brief. Interview questions help you practice explaining the work.
 
 The seven stages share request-local state. Resume evidence feeds role matching and gap analysis, then the learning planner, career strategist, interview coach, and practice hiring review. The dashboard includes the actual run log.
 
@@ -70,13 +70,32 @@ python -m training.benchmark_context --details
 
 | Measure | Whole-term keywords | Context-aware scoring |
 | --- | ---: | ---: |
-| Positive resume evidence F1 | 84.5% | 94.0% |
+| Positive resume evidence F1 | 84.5% | 97.9% |
 | Required-skill classification F1 | 73.3% | 100.0% |
 | Preferred-skill classification F1 | 0.0% | 96.8% |
-| Mean absolute error in required coverage | 26.8 pp | 10.5 pp |
-| Correct candidate order | 14/20 | 17/20 |
+| Mean absolute error in required coverage | 26.8 pp | 1.4 pp |
+| Correct candidate order | 14/20 | 20/20 |
 
-Context-aware scoring identified 68% of explicit denials in this sample. Two-page PDFs had the lowest positive-evidence F1 at 82.1%. Use these results to guide testing on more varied documents.
+Context-aware scoring identified 96% of explicit denials in this sample. Two-page PDFs had the lowest positive-evidence F1 at 91.4%.
+
+### Tricky resumes
+
+The [fresh cases](training/benchmark_context_stress_cases.json) cover 18 fictional resumes and six job descriptions. They include multi-page and two-column layouts, wrapped denials, and sentences that contrast one skill with another. Compare the current app with the previous version using the same labeled inputs.
+
+```bash
+git worktree add --detach ../careerlaunch-before 38948c7
+python -m training.benchmark_context --cases training/benchmark_context_stress_cases.json --baseline-checkout ../careerlaunch-before
+```
+
+| Measure | Previous version | Current version |
+| --- | ---: | ---: |
+| Positive resume evidence F1 | 94.0% | 100.0% |
+| Explicit denials found | 73.1% | 100.0% |
+| Two-column evidence F1 | 90.9% | 100.0% |
+| Two-page evidence F1 | 88.9% | 100.0% |
+| Mean absolute error in required coverage | 7.3 pp | 0.0 pp |
+
+This is a small synthetic regression set. It exposed a missed “no exposure to” phrasing that was fixed during development.
 
 ## Run tests
 

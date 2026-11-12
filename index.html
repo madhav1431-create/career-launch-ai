@@ -101,15 +101,18 @@
   .text-button { border: 0; background: none; padding: 0; color: var(--accent); text-decoration: underline; text-underline-offset: .18em; }
   .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
   .gap-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
-  .priority-card { display: flex; flex-direction: column; gap: .6rem; }
-  .priority-card > * + * { margin-top: 0; }
-  .priority-card .gap-next { margin-top: auto; padding-top: .5rem; }
   .priority-kind { font-size: .78rem; font-weight: 700; color: var(--muted); }
   .compact-heading { margin-bottom: .65rem; }
   .section-gap { margin-top: 1rem; }
   .card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: clamp(1rem, 2.5vw, 1.35rem); min-width: 0; overflow-wrap: anywhere; }
   .card > * + *, .stack > * + * { margin-top: .7rem; }
   .card-stack > * + * { margin-top: .9rem; }
+  .priority-card { display: flex; flex-direction: column; gap: .5rem; }
+  .priority-card > * + * { margin-top: 0; }
+  .priority-card .gap-next { margin-top: auto; padding-top: .35rem; }
+  .practice-details { display: grid; gap: .52rem; margin: 0; padding-top: .65rem; border-top: 1px solid var(--border); }
+  .practice-details dt { color: var(--muted); font-size: .78rem; font-weight: 750; }
+  .practice-details dd { margin: .08rem 0 0; font-size: .9rem; line-height: 1.45; }
   .skill-item { border-top: 1px solid var(--border); padding-top: .8rem; }
   .review-tools { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: .6rem; }
   .review-row { display: grid; gap: .3rem; }
@@ -126,6 +129,8 @@
   .log time { font-variant-numeric: tabular-nums; }
   .roadmap { list-style: none; padding: 0; }
   .roadmap li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: baseline; gap: .75rem; }
+  .roadmap li > * { margin: 0; }
+  .roadmap .practice-details { grid-column: 2 / -1; }
   .step-number { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
   .roadmap small { display: block; color: var(--muted); }
   .roadmap li:focus { outline: 3px solid var(--accent); outline-offset: 3px; }
@@ -140,6 +145,7 @@
     .topbar-actions { justify-content: flex-end; }
     .grid { grid-template-columns: 1fr; }
     .gap-grid { grid-template-columns: 1fr; }
+    .roadmap .practice-details { grid-column: 1 / -1; }
   }
 
   @media print {
@@ -750,11 +756,14 @@
       } else {
         card.append(element('p', 'hint', 'Resume · No supporting line found'));
       }
+      if (gap.practice) card.append(practiceDetails(gap.practice));
 
       const stepIndex = steps.findIndex(step => step.skill === gap.skill);
       const stepId = 'roadmap-step-' + stepIndex;
       const action = element('p', 'gap-next');
-      const link = element('a', null, gap.action || 'Open the learning plan');
+      const linkText = stepIndex < 0 ? 'Open the learning plan' : 'Open learning step';
+      const link = element('a', null, gap.practice ? linkText : gap.action || linkText);
+      if (stepIndex >= 0) link.setAttribute('aria-label', 'Open learning step for ' + displaySkill(gap.skill));
       link.href = stepIndex < 0 ? '#learning' : '#' + stepId;
       link.addEventListener('click', event => {
         event.preventDefault();
@@ -768,6 +777,20 @@
     });
     byId('priorityGaps').hidden = !cards.length;
     byId('gapCards').replaceChildren(...cards);
+  }
+
+  function practiceDetails(practice) {
+    const details = element('dl', 'practice-details');
+    for (const [key, label] of [
+      ['project', 'Small project'],
+      ['output', 'Expected output'],
+      ['check', 'Check your result'],
+    ]) {
+      const item = element('div');
+      item.append(element('dt', null, label), element('dd', null, practice[key]));
+      details.append(item);
+    }
+    return details;
   }
 
   function renderPriorities(assessment) {
@@ -873,6 +896,7 @@
       const link = externalLink('Learn', href);
       link.setAttribute('aria-label', 'Learn ' + displaySkill(step.skill));
       row.append(element('span', 'step-number', index + 1), detail, link);
+      if (step.practice) row.append(practiceDetails(step.practice));
       return row;
     }));
   }
